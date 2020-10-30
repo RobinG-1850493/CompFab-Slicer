@@ -7,9 +7,6 @@
     Title="CompFab Slicer"
     Width="1280"
     Height="720">
-    <Window.DataContext>
-        <local:MainViewModel/>
-    </Window.DataContext>
     <Grid>
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -229,24 +226,86 @@
                 </Setter>
             </Style>
         </Grid.Resources>
-        <!--  The HelixViewport3D supports camera manipulation, and can be used just like the Viewport3D  -->
-        <HelixToolkit:HelixViewport3D ShowFrameRate="True" ZoomExtentsWhenLoaded="True" ZoomAroundMouseDownPoint="True" RotateAroundMouseDownPoint="True" IsTopBottomViewOrientedToFrontBack="True" IsViewCubeEdgeClicksEnabled="True">
+
+        <DockPanel x:Name="Menu">
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Name="OpenMenuItem" Header="_Open" Click="OpenMenuItem_Click"/>
+                    <MenuItem Name="SaveMenuItem" Header="_Save" Click="SaveMenuItem_Click"/>
+                    <Separator />
+                    <MenuItem Name="ExitMenuItem" Header="_Exit" Click="ExitMenuItem_Click"/>
+                </MenuItem>
+            </Menu>
+
+            <Grid >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.8*"></ColumnDefinition>
+                    <ColumnDefinition Width="1"></ColumnDefinition>
+                    <ColumnDefinition Width="0.2*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+
+                <!--  The HelixViewport3D supports camera manipulation, and can be used just like the Viewport3D  -->
+                <HelixToolkit:HelixViewport3D Grid.Column="0" Grid.Row="0" ShowFrameRate="True" ZoomExtentsWhenLoaded="True" ZoomAroundMouseDownPoint="True" RotateAroundMouseDownPoint="True" IsTopBottomViewOrientedToFrontBack="True" IsViewCubeEdgeClicksEnabled="True">
 
 
-            <!--  Remember to add light to the scene  -->
-            <HelixToolkit:SunLight />
+                    <!--  Remember to add light to the scene  -->
+                    <HelixToolkit:SunLight />
 
-            <!--  The content of this visual is defined in MainViewModel.cs  -->
-            <ModelVisual3D Content="{Binding Model}" />
+                    <!--  The content of this visual is defined in MainViewModel.cs  -->
+                    <ModelVisual3D x:Name="VisualModel" Content="{Binding Model}" />
 
-            <!--  You can also add elements here in the xaml  -->
-            <HelixToolkit:GridLinesVisual3D
-                Width="8"
-                Length="8"
+                    <!--  You can also add elements here in the xaml  -->
+                    <!-- TODO laat deze aanpassen aan de grootte van het object!!-->
+                    <HelixToolkit:GridLinesVisual3D
+                Width="30"
+                Length="30"
                 MajorDistance="1"
                 MinorDistance="1"
                 Thickness="0.01" />
 
-        </HelixToolkit:HelixViewport3D>
+                </HelixToolkit:HelixViewport3D>
+                <Button Content="Slice!" Grid.Column="2" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100"/>
+
+                <Label Content="number of shells:" Grid.Column="2" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="2" HorizontalAlignment="Right" Height="23" Margin="158,137,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+
+                <Label Content="nozzle diameter:" Grid.Column="2" HorizontalAlignment="Left" Margin="30,75,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="2" HorizontalAlignment="Right" Height="23" Margin="158,77,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+
+                <Label Content="layer height:" Grid.Column="2" HorizontalAlignment="Left" Margin="30,50,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="2" HorizontalAlignment="Right" Height="23" Margin="158,52,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+
+                <Label Content="printing temperature:" Grid.Column="2" HorizontalAlignment="Left" Margin="30,255,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="2" HorizontalAlignment="Right" Height="23" Margin="158,257,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+
+                <Label Content="printing speed:" Grid.Column="2" HorizontalAlignment="Left" Margin="30,280,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="2" HorizontalAlignment="Right" Height="23" Margin="158,282,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+
+
+                <Label Content="infill density:" Grid.Column="2" HorizontalAlignment="Left" Margin="30,195,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="2" HorizontalAlignment="Right" Height="23" Margin="0,197,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+
+
+                <Label Content="enable supports:" Grid.Column="2" HorizontalAlignment="Left" Margin="30,340,0,0" VerticalAlignment="Top"/>
+                <CheckBox Content="" Grid.Column="2" HorizontalAlignment="Right" Margin="203,347,30,0" VerticalAlignment="Top"/>
+
+                <TextBlock Grid.Column="2" Background="LightGray" TextAlignment="Center" Margin="30,30,30,0" TextWrapping="Wrap"  Text="Quality" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="2" Background="LightGray" TextAlignment="Center" Margin="30,115,30,0" TextWrapping="Wrap"  Text="Shell" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="2" Background="LightGray" TextAlignment="Center" Margin="30,175,30,0" TextWrapping="Wrap"  Text="Infill" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="2" Background="LightGray" TextAlignment="Center" Margin="30,235,30,0" TextWrapping="Wrap"  Text="Material &amp; speed" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="2" Background="LightGray" TextAlignment="Center" Margin="30,320,30,0" TextWrapping="Wrap"  Text="Support" VerticalAlignment="Top"/>
+
+                <Rectangle Grid.Column="1" Fill="Black"/>
+            </Grid>
+
+
+
+
+
+        </DockPanel>
+
+
+
+
     </Grid>
 </Window>

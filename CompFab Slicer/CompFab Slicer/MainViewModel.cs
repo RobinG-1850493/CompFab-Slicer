@@ -11,7 +11,7 @@ namespace CompFab_Slicer
 {
     public class MainViewModel
     {
-        public MainViewModel()
+        public MainViewModel(string file)
         {
             var modelGroup = new Model3DGroup();
 
@@ -28,7 +28,7 @@ namespace CompFab_Slicer
             var insideMaterial = MaterialHelper.CreateMaterial(Colors.Gray);
 
             StLReader reader = new HelixToolkit.Wpf.StLReader();
-            Model3DGroup group = reader.Read("C:\\Users\\Robin\\Desktop\\Slicer\\CompFab Slicer\\wolf.stl");
+            Model3DGroup group = reader.Read(file);
             GeometryModel3D geoModel = FindLargestModel(group);
             MeshGeometry3D stlMesh = geoModel.Geometry as MeshGeometry3D;
 
