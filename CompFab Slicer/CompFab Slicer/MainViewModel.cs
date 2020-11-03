@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using HelixToolkit.Wpf;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using ClipperLib;
+
+using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
+using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 
 namespace CompFab_Slicer
 {
@@ -41,6 +45,8 @@ namespace CompFab_Slicer
 
             // Set the property, which will be bound to the Content property of the ModelVisual3D (see MainWindow.xaml)
             this.Model = geoModel;
+
+            //testFunc(indices);
         }
 
         public Model3D Model { get; set; }

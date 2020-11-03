@@ -297,15 +297,6 @@
 
                 <Rectangle Grid.Column="1" Fill="Black"/>
             </Grid>
-
-
-
-
-
         </DockPanel>
-
-
-
-
     </Grid>
 </Window>
