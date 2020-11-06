@@ -264,7 +264,7 @@
                 Thickness="0.01" />
 
                 </HelixToolkit:HelixViewport3D>
-                <Button Content="Slice!" Grid.Column="2" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100"/>
+                <Button Content="Slice!" Grid.Column="2" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100" Click="Button_Click"/>
 
                 <Label Content="number of shells:" Grid.Column="2" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>
                 <TextBox Grid.Column="2" HorizontalAlignment="Right" Height="23" Margin="158,137,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>

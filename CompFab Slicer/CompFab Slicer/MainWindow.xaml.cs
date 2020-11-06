@@ -43,6 +43,7 @@ namespace CompFab_Slicer
                 ShowSTL(filePath);
             }
         }
+      
 
         public void ShowSTL(string file)
         {
@@ -50,8 +51,7 @@ namespace CompFab_Slicer
             var visualModel = VisualModel;
 
             // Create a mesh builder and add a box to it
-            var meshBuilder = new MeshBuilder(false, false);
-
+             var meshBuilder = new MeshBuilder(false, false);
             //meshBuilder.AddBox(new Point3D(0, 0, 0), 50, 50, 0.2);
             // Create a mesh from the builder (and freeze it
 
@@ -86,10 +86,10 @@ namespace CompFab_Slicer
             }
 
             Path zPlane = new Path(4);
-            zPlane.Add(new IntPoint(-100 * scale, -100 * scale, 0));
-            zPlane.Add(new IntPoint(-100 * scale, 100 * scale, 0));
-            zPlane.Add(new IntPoint(100 * scale, 100 * scale, 0));
-            zPlane.Add(new IntPoint(100 * scale, -100 * scale, 0));
+            zPlane.Add(new IntPoint(-100 * scale, -100 * scale, 22 * scale));
+            zPlane.Add(new IntPoint(-100 * scale, 100 * scale, 22 * scale));
+            zPlane.Add(new IntPoint(100 * scale, 100 * scale, 22 * scale));
+            zPlane.Add(new IntPoint(100 * scale, -100 * scale, 22 * scale));
             clip.Add(zPlane);
 
             geoModel.Material = yellowMaterial;
@@ -97,12 +97,7 @@ namespace CompFab_Slicer
             geoModel.Transform = new TranslateTransform3D(0, 0, 0);
             modelGroup.Children.Add(geoModel);
 
-            
-
-            // Set the property, which will be bound to the Content property of the ModelVisual3D (see MainWindow.xaml)
-
             Paths slice = intersect(contours, clip, 0.2, scale);
-            slice = Clipper.CleanPolygons(slice);
             
 
             for(int i = 0; i < slice.Count; i++)
@@ -110,8 +105,11 @@ namespace CompFab_Slicer
                 List<Point3D> polygon = new List<Point3D>();
                 for (int j = 0; j < slice[i].Count; j++)
                 {
-                    Point3D temp = new Point3D((double)(slice[i][j].X) / scale, (double)(slice[i][j].Y) / scale, 0);
-                    polygon.Add(temp);
+                    if(0*scale <= slice[i][j].Z && slice[i][j].Z <= (long)(0.2*scale))
+                    {
+                        Point3D temp = new Point3D((double)(slice[i][j].X) / scale, (double)(slice[i][j].Y) / scale, 0);
+                        polygon.Add(temp);
+                    }
                 }
                 meshBuilder.AddPolygon(polygon);
             }
@@ -132,15 +130,25 @@ namespace CompFab_Slicer
             c.AddPaths(contours, PolyType.ptSubject, false);
             c.AddPaths(clip, PolyType.ptClip, true);
 
-            PolyTree test = new PolyTree();
+            //WERKT NOG NIET
 
-            bool succes = c.Execute(ClipType.ctIntersection, test,
-              PolyFillType.pftNonZero, PolyFillType.pftNonZero);
+            //Clipper.ZFillCallback customCallback = clipperCallback;
+            //c.ZFillFunction(customCallback);
+            
+            PolyTree pSol = new PolyTree();
 
-            solution = Clipper.PolyTreeToPaths(test);
-            solution = Clipper.CleanPolygons(solution);
+            bool succes = c.Execute(ClipType.ctIntersection, pSol,
+              PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+            solution = Clipper.PolyTreeToPaths(pSol);
+            // solution = Clipper.CleanPolygons(solution);
 
             return solution;
+        }
+
+        public static void clipperCallback(IntPoint bot1, IntPoint top1, IntPoint bot2, IntPoint top2, ref IntPoint pt)
+        {
+            pt.Z = 20000;
         }
 
         private GeometryModel3D FindLargestModel(Model3DGroup group)
@@ -174,6 +182,11 @@ namespace CompFab_Slicer
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
         {
         
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
