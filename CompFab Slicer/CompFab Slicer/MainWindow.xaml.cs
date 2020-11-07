@@ -21,7 +21,6 @@ namespace CompFab_Slicer
 {
     public partial class MainWindow : Window
     {
-        public MeshBuilder meshBuilder = new MeshBuilder(false, false);
         public MeshGeometry3D modelMesh;
 
         Material yellowMaterial = MaterialHelper.CreateMaterial(Colors.Yellow);
@@ -87,12 +86,15 @@ namespace CompFab_Slicer
 
         private void Slice_Click(object sender, RoutedEventArgs e)
         {
+            
             if(modelMesh != null)
             {
+                var sModel = sliceModel;
+                MeshBuilder meshBuilder = new MeshBuilder(false, false, false);
                 Model3DGroup modelGroup = new Model3DGroup();
 
                 Slicer slicer = new Slicer(meshBuilder, modelMesh);
-                var sModel = sliceModel;
+                
                 MeshGeometry3D mesh = slicer.Slice();
 
                 GeometryModel3D slice = new GeometryModel3D { Geometry = mesh, Material = yellowMaterial, BackMaterial = insideMaterial, Transform = new TranslateTransform3D(0, 0, 0) };
