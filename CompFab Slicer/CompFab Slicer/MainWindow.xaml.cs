@@ -27,7 +27,6 @@ namespace CompFab_Slicer
         Material yellowMaterial = MaterialHelper.CreateMaterial(Colors.Yellow);
         Material insideMaterial = MaterialHelper.CreateMaterial(Colors.Gray);
 
-        Model3DGroup modelGroup = new Model3DGroup();
         public MainWindow()
         {
             InitializeComponent();
@@ -49,6 +48,7 @@ namespace CompFab_Slicer
         public void ShowSTL(string file)
         {
             var visualModel = VisualModel;
+            Model3DGroup modelGroup = new Model3DGroup();
 
             StLReader reader = new StLReader();
             Model3DGroup group = reader.Read(file);
@@ -89,14 +89,16 @@ namespace CompFab_Slicer
         {
             if(modelMesh != null)
             {
+                Model3DGroup modelGroup = new Model3DGroup();
+
                 Slicer slicer = new Slicer(meshBuilder, modelMesh);
-                var visualModel = VisualModel;
+                var sModel = sliceModel;
                 MeshGeometry3D mesh = slicer.Slice();
 
-                GeometryModel3D slice = new GeometryModel3D { Geometry = mesh, Material = yellowMaterial, BackMaterial = insideMaterial, Transform = new TranslateTransform3D(0, 50, 0) };
+                GeometryModel3D slice = new GeometryModel3D { Geometry = mesh, Material = yellowMaterial, BackMaterial = insideMaterial, Transform = new TranslateTransform3D(0, 0, 0) };
                 modelGroup.Children.Add(slice);
 
-                visualModel.Content = modelGroup;
+                sModel.Content = modelGroup;
             }
             else
             {
