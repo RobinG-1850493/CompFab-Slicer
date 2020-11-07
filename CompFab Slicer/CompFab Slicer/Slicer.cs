@@ -8,6 +8,8 @@ using System.Windows.Media.Media3D;
 using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 using ClipperLib;
+using System.Windows.Shapes;
+using System.Windows.Markup.Localizer;
 
 namespace CompFab_Slicer
 {
@@ -27,26 +29,37 @@ namespace CompFab_Slicer
         {
             Paths zPlane = createClippingPlane(scale);
             PolyTree contours = createContoursTree(scale, modelMesh);
-            Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), 10, 0.2, scale);
+            Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), 1, 0.2, scale);
 
-            Paths connected = connectPoints(intersectingPoints);
-            Paths slice = intersect(connected, zPlane, 0.2, scale);
+            //intersectingPoints = Clipper.CleanPolygons(intersectingPoints);
+            Paths slice = intersect(intersectingPoints, zPlane, 0.2, scale);
+            Paths connected = connectPoints(slice);
 
-            
-
-            for (int i = 0; i < slice.Count; i++)
+            Polygon3D poly;
+            for (int i = 0; i < connected.Count; i++)
             {
                 List<Point3D> polygon = new List<Point3D>();
-                for (int j = 0; j < slice[i].Count; j++)
+                for (int j = 0; j < connected[i].Count; j++)
                 {
-                    Point3D temp = new Point3D((double)(slice[i][j].X) / scale, (double)(slice[i][j].Y) / scale, 0);
+                    Point3D temp = new Point3D((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale, 0);
                     polygon.Add(temp);
                 }
+                poly = new Polygon3D(polygon);
+                //FillPolygon(poly);
                 meshBuilder.AddPolygon(polygon);
             }
-            var mesh = meshBuilder.ToMesh(true);
+            
+            var mesh = meshBuilder.ToMesh();
 
             return mesh;
+        }
+
+        public void FillPolygon(Polygon3D p3)
+        {
+            HelixToolkit.Wpf.Polygon polygon = p3.Flatten();
+            var triangleIndexes = CuttingEarsTriangulator.Triangulate(polygon.Points);
+
+            meshBuilder.Append(p3.Points, triangleIndexes);
         }
 
         private Paths connectPoints(Paths slice)
@@ -178,10 +191,15 @@ namespace CompFab_Slicer
                     else
                     {
                         X = pt1.X + (((zPlane - pt1.Z) * (pt2.X - pt1.X)) / (pt2.Z - pt1.Z));
-                        Y = pt1.X + (((zPlane - pt1.Z) * (pt2.Y - pt1.Y)) / (pt2.Z - pt1.Z));
+                        Y = pt1.Y + (((zPlane - pt1.Z) * (pt2.Y - pt1.Y)) / (pt2.Z - pt1.Z));
                     }
                     
                     Z = zPlane;
+
+                    if (Y >= 8.5 * scale)
+                    {
+                        System.Diagnostics.Debug.WriteLine(Y);
+                    }
 
                     intersectingContours.Add(new IntPoint(X, Y, Z));
                 }
@@ -201,6 +219,7 @@ namespace CompFab_Slicer
                 checkIntersection(contours[i][0], contours[i][2], zPlane, ref intersectingPoints);
                 checkIntersection(contours[i][1], contours[i][2], zPlane, ref intersectingPoints);
             }
+
             intersectingContours.Add(intersectingPoints);
             return intersectingContours;
         }
@@ -217,12 +236,12 @@ namespace CompFab_Slicer
             PolyTree pSol = new PolyTree();
 
             bool succes = c.Execute(ClipType.ctIntersection, pSol,
-              PolyFillType.pftEvenOdd, PolyFillType.pftNonZero);
+              PolyFillType.pftNonZero, PolyFillType.pftNonZero);
 
             solution = Clipper.PolyTreeToPaths(pSol);
 
-            //solution = Clipper.SimplifyPolygons(solution, PolyFillType.pftNonZero);
             solution = Clipper.CleanPolygons(solution);
+            //solution = Clipper.SimplifyPolygons(solution);
 
             return solution;
         }
