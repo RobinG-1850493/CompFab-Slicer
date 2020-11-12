@@ -8,6 +8,7 @@ using Paths = System.Collections.Generic.List<System.Collections.Generic.List<Cl
 using ClipperLib;
 using System.Windows.Media;
 using System.Windows;
+using System.Net;
 
 namespace CompFab_Slicer
 {
@@ -32,10 +33,10 @@ namespace CompFab_Slicer
 
             Paths connected = connectPoints(intersectingPoints);
             // intersectingPoints = Clipper.CleanPolygons(intersectingPoints);
-            //Paths slice = intersect(connected, zPlane, 0.2, scale);
+            //  ²Paths slice = intersect(connected, zPlane, 0.2, scale);
             //Paths connected = connectPoints(slice);
 
-            //connected = Clipper.CleanPolygons(connected);
+            connected = Clipper.CleanPolygons(connected);
 
             //Polygon3D poly;
             List<PointCollection> polygonPoints = new List<PointCollection>();
@@ -73,7 +74,87 @@ namespace CompFab_Slicer
         private Paths connectPoints(Paths slice)
         {
             Paths connectedPolygons = new Paths();
-            double dist, dist2, smallestDist = double.MaxValue;
+
+            for (int i = 0; i < slice.Count; i++){
+                Path pts = new Path();
+                
+
+                if(slice[i].Count > 0)
+                {
+                    IntPoint startPt, endPt;
+                    pts = slice[i];
+
+                    while (pts.Count > 2)
+                    {
+                        Path result = new Path();
+                        startPt = pts[0];
+                        endPt = pts[1];
+
+                        result.Add(startPt);
+                        result.Add(endPt);
+
+                        pts.Remove(startPt);
+                        pts.Remove(endPt);
+
+                        bool found = true;
+                        while (found && pts.Count != 0)
+                        {
+                            for (int j = 0; j < pts.Count; j++)
+                            {
+                                if (endPt == pts[j])
+                                {
+                                    if (j % 2 == 0)
+                                    {
+                                        startPt = pts[j];
+                                        endPt = pts[j + 1];
+
+                                        result.Add(startPt);
+                                        result.Add(endPt);
+
+                                        pts.RemoveAt(j);
+                                        pts.RemoveAt(j);
+                                    }
+                                    else
+                                    {
+                                        startPt = pts[j];
+                                        endPt = pts[j - 1];
+
+                                        result.Add(startPt);
+                                        result.Add(endPt);
+
+                                        pts.RemoveAt(j - 1);
+                                        pts.RemoveAt(j - 1);
+                                    }
+
+                                    found = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    found = false;
+                                }
+                            }
+                        }
+                        if(pts.Count == 2)
+                        {
+                            result.Add(pts[0]);
+                            result.Add(pts[1]);
+
+                            pts.Clear();
+                        }
+                        
+                        connectedPolygons.Add(result);
+                    }
+                }
+            }
+            
+            return connectedPolygons;
+        }
+
+        /*private Paths connectPoints(Paths slice)
+        {
+            Paths connectedPolygons = new Paths();
+            double dist, smallestDist = double.MaxValue;
             int smallestIndex = -1;
 
             for(int i = 0; i < slice.Count; i++)
@@ -89,12 +170,15 @@ namespace CompFab_Slicer
                     result.Add(startPt);
                     result.Add(endPt);
 
+                    pts.Remove(startPt);
+                    pts.Remove(endPt);
+
                     while (pts.Count > 0)
                     {
                         smallestDist = double.MaxValue;
                         for(int j = 0; j < pts.Count; j++)
                         {
-                            if (startPt != pts[j])
+                            if (startPt != pts[j] || endPt != pts[j])
                             {
                                 dist = calculateEuclideanDistance(endPt, pts[j]);
 
@@ -128,7 +212,7 @@ namespace CompFab_Slicer
             }
 
             return connectedPolygons;
-        }
+        }*/
 
         /*private Paths connectPoints(Paths slice)
         {

@@ -99,15 +99,19 @@ namespace CompFab_Slicer
                 SolidColorBrush b = new SolidColorBrush();
                 b.Color = Colors.DarkGray;
                 SolidColorBrush fillB = new SolidColorBrush();
-                fillB.Color = Colors.LightBlue;
+                //fillB.Color = Colors.LightBlue;
 
                 for(int i = 0; i < polygons.Count(); i++)
                 {
                     System.Windows.Shapes.Polygon p = new System.Windows.Shapes.Polygon();
                     p.Stroke = b;
                     p.Fill = fillB;
-                    p.StrokeThickness = 1;
-                    p.Stretch = Stretch.Uniform;
+                    p.StrokeThickness = 0.25;
+                    p.HorizontalAlignment = HorizontalAlignment.Center;
+                    p.VerticalAlignment = VerticalAlignment.Center;
+                    
+                    p.RenderTransform = new ScaleTransform(6, 6, 1, 1);
+                    //p.Stretch = Stretch.Uniform;
                     p.Margin = new Thickness(10);
                     
                     for(int j = 0; j < polygons[i].Count; j++)

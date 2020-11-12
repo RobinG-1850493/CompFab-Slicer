@@ -266,14 +266,8 @@
                 Thickness="0.01" />
 
                 </HelixToolkit:HelixViewport3D>
-                <Grid x:Name="canvas" Grid.Column="2" Grid.Row="0">
-                    <Polygon x:Name="canvas_polygon"    
-                        Stroke="DarkGray"     
-                        StrokeThickness="1"   
-                        Stretch="Uniform"
-                        Fill="LightBlue"       
-                        Margin = "10" />
-                </Grid>
+                <Canvas x:Name="canvas" Grid.Column="2" Grid.Row="0">
+                </Canvas>
                 <Button Content="Slice!" Grid.Column="4" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100" Click="Slice_Click"/>
 
                 <Label Content="number of shells:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>
