@@ -266,19 +266,14 @@
                 Thickness="0.01" />
 
                 </HelixToolkit:HelixViewport3D>
-                <HelixToolkit:HelixViewport3D Grid.Column="2" Grid.Row="0" ShowFrameRate="True" ZoomExtentsWhenLoaded="True" ZoomAroundMouseDownPoint="True" RotateAroundMouseDownPoint="True" IsTopBottomViewOrientedToFrontBack="True" IsViewCubeEdgeClicksEnabled="True">
-
-
-                    <!--  Remember to add light to the scene  -->
-                    <HelixToolkit:SunLight />
-
-                    <!--  The content of this visual is defined in MainViewModel.cs  -->
-                    <ModelVisual3D x:Name="sliceModel" Content="{Binding Model}" />
-
-                    <!--  You can also add elements here in the xaml  -->
-                    <!-- TODO laat deze aanpassen aan de grootte van het object!!-->
-
-                </HelixToolkit:HelixViewport3D>
+                <Grid x:Name="canvas" Grid.Column="2" Grid.Row="0">
+                    <Polygon x:Name="canvas_polygon"    
+                        Stroke="DarkGray"     
+                        StrokeThickness="1"   
+                        Stretch="Uniform"
+                        Fill="LightBlue"       
+                        Margin = "10" />
+                </Grid>
                 <Button Content="Slice!" Grid.Column="4" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100" Click="Slice_Click"/>
 
                 <Label Content="number of shells:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>

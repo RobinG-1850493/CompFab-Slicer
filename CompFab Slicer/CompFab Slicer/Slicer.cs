@@ -2,14 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 using ClipperLib;
-using System.Windows.Shapes;
-using System.Windows.Markup.Localizer;
+using System.Windows.Media;
+using System.Windows;
 
 namespace CompFab_Slicer
 {
@@ -25,39 +23,43 @@ namespace CompFab_Slicer
             this.modelMesh = modelMesh;
         }
 
-        public MeshGeometry3D Slice()
+        public List<PointCollection> Slice()
         {
             Paths zPlane = createClippingPlane(scale);
             PolyTree contours = createContoursTree(scale, modelMesh);
 
-            Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), 110, 0.2, scale);
+            Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), 10, 0.2, scale);
 
+            Paths connected = connectPoints(intersectingPoints);
             // intersectingPoints = Clipper.CleanPolygons(intersectingPoints);
-            Paths slice = intersect(intersectingPoints, zPlane, 0.2, scale);
-            Paths connected = connectPoints(slice);
+            //Paths slice = intersect(connected, zPlane, 0.2, scale);
+            //Paths connected = connectPoints(slice);
 
-            connected = Clipper.CleanPolygons(connected);
+            //connected = Clipper.CleanPolygons(connected);
 
-            Polygon3D poly;
+            //Polygon3D poly;
+            List<PointCollection> polygonPoints = new List<PointCollection>();
             for (int i = 0; i < connected.Count; i++)
             {
-                List<Point3D> polygon = new List<Point3D>();
+                //List<Point3D> polygon = new List<Point3D>();
+                PointCollection pts = new PointCollection();
                 for (int j = 0; j < connected[i].Count; j++)
                 {
-                    Point3D temp = new Point3D((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale, 0);
-                    polygon.Add(temp);
+                    Point temp = new Point((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale);
+                    pts.Add(temp);
                     //meshBuilder.AddBox(temp, 0.5, 0.5, 0);
                 }
-                poly = new Polygon3D(polygon);
+                //poly = new Polygon3D(polygon);
                 //FillPolygon(poly);
-                
-                meshBuilder.AddPolygon(polygon);
+
+                //meshBuilder.AddPolygon(polygon);
+                polygonPoints.Add(pts);
             }
             
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
 
-            return mesh;
+            return polygonPoints;
         }
 
         public void FillPolygon(Polygon3D p3)
@@ -71,10 +73,70 @@ namespace CompFab_Slicer
         private Paths connectPoints(Paths slice)
         {
             Paths connectedPolygons = new Paths();
-            double smallestDist = double.MaxValue, dist;
+            double dist, dist2, smallestDist = double.MaxValue;
             int smallestIndex = -1;
 
             for(int i = 0; i < slice.Count; i++)
+            {
+                Path pts = new Path();
+                Path result = new Path();
+                if(slice[i].Count > 0)
+                {
+                    pts = slice[i];
+                    IntPoint startPt = pts[0];
+                    IntPoint endPt = pts[1];
+
+                    result.Add(startPt);
+                    result.Add(endPt);
+
+                    while (pts.Count > 0)
+                    {
+                        smallestDist = double.MaxValue;
+                        for(int j = 0; j < pts.Count; j++)
+                        {
+                            if (startPt != pts[j])
+                            {
+                                dist = calculateEuclideanDistance(endPt, pts[j]);
+
+                                if (dist < smallestDist)
+                                {
+                                    smallestDist = dist;
+                                    smallestIndex = j;
+                                }
+                            }
+                        }
+
+                        if (smallestIndex % 2 == 0)
+                        {
+                            result.Add(pts[smallestIndex]);
+                            result.Add(pts[smallestIndex + 1]);
+                            startPt = pts[smallestIndex];
+                            endPt = pts[smallestIndex + 1];
+                        }
+                        else
+                        {
+                            result.Add(pts[smallestIndex]);
+                            result.Add(pts[smallestIndex - 1]);
+                            startPt = pts[smallestIndex];
+                            endPt = pts[smallestIndex - 1];
+                        }
+                        pts.Remove(startPt);
+                        pts.Remove(endPt);
+                    }
+                    connectedPolygons.Add(result);
+                }
+            }
+
+            return connectedPolygons;
+        }
+
+        /*private Paths connectPoints(Paths slice)
+        {
+            Paths connectedPolygons = new Paths();
+            double smallestDist = double.MaxValue, dist;
+            int smallestIndex = -1;
+
+            for (int i = 0; i < slice.Count; i++)
             {
                 Path points = new Path();
                 if (slice[i].Count > 0)
@@ -111,7 +173,7 @@ namespace CompFab_Slicer
 
 
             return connectedPolygons;
-        }
+        }*/
 
         private double calculateEuclideanDistance(IntPoint pt1, IntPoint pt2)
         {

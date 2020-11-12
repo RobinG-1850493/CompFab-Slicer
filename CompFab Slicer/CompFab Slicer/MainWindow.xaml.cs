@@ -86,21 +86,37 @@ namespace CompFab_Slicer
 
         private void Slice_Click(object sender, RoutedEventArgs e)
         {
-            
             if(modelMesh != null)
             {
-                var sModel = sliceModel;
+                canvas.Children.Clear();
                 MeshBuilder meshBuilder = new MeshBuilder(false, false, false);
                 Model3DGroup modelGroup = new Model3DGroup();
 
                 Slicer slicer = new Slicer(meshBuilder, modelMesh);
                 
-                MeshGeometry3D mesh = slicer.Slice();
+                List<PointCollection> polygons = slicer.Slice();
 
-                GeometryModel3D slice = new GeometryModel3D { Geometry = mesh, Material = yellowMaterial, BackMaterial = insideMaterial, Transform = new TranslateTransform3D(0, 0, 0) };
-                modelGroup.Children.Add(slice);
+                SolidColorBrush b = new SolidColorBrush();
+                b.Color = Colors.DarkGray;
+                SolidColorBrush fillB = new SolidColorBrush();
+                fillB.Color = Colors.LightBlue;
 
-                sModel.Content = modelGroup;
+                for(int i = 0; i < polygons.Count(); i++)
+                {
+                    System.Windows.Shapes.Polygon p = new System.Windows.Shapes.Polygon();
+                    p.Stroke = b;
+                    p.Fill = fillB;
+                    p.StrokeThickness = 1;
+                    p.Stretch = Stretch.Uniform;
+                    p.Margin = new Thickness(10);
+                    
+                    for(int j = 0; j < polygons[i].Count; j++)
+                    {
+                        p.Points.Add(polygons[i][j]);
+                    }
+                    canvas.Children.Add(p);
+                }
+
             }
             else
             {
