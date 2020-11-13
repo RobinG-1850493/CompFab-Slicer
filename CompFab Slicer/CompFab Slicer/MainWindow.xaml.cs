@@ -106,12 +106,10 @@ namespace CompFab_Slicer
                     System.Windows.Shapes.Polygon p = new System.Windows.Shapes.Polygon();
                     p.Stroke = b;
                     p.Fill = fillB;
-                    p.StrokeThickness = 0.25;
+                    p.StrokeThickness = 0.05;
                     p.HorizontalAlignment = HorizontalAlignment.Center;
                     p.VerticalAlignment = VerticalAlignment.Center;
-                    
-                    p.RenderTransform = new ScaleTransform(6, 6, 1, 1);
-                    //p.Stretch = Stretch.Uniform;
+                    p.RenderTransform = new ScaleTransform(-6, -6, 0, 20);
                     p.Margin = new Thickness(10);
                     
                     for(int j = 0; j < polygons[i].Count; j++)

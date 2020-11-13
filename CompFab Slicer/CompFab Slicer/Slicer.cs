@@ -26,34 +26,32 @@ namespace CompFab_Slicer
 
         public List<PointCollection> Slice()
         {
-            Paths zPlane = createClippingPlane(scale);
             PolyTree contours = createContoursTree(scale, modelMesh);
 
-            Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), 10, 0.2, scale);
-
+            Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), 15, 0.2, scale);
             Paths connected = connectPoints(intersectingPoints);
-            // intersectingPoints = Clipper.CleanPolygons(intersectingPoints);
-            //  ²Paths slice = intersect(connected, zPlane, 0.2, scale);
-            //Paths connected = connectPoints(slice);
 
             connected = Clipper.CleanPolygons(connected);
 
-            //Polygon3D poly;
+            Paths eroded = erodePerimeter(connected);
+
             List<PointCollection> polygonPoints = new List<PointCollection>();
+
+            
+            for(int i = 0; i < eroded.Count; i++)
+            {
+                connected.Add(eroded[i]);
+            }
+
+
             for (int i = 0; i < connected.Count; i++)
             {
-                //List<Point3D> polygon = new List<Point3D>();
                 PointCollection pts = new PointCollection();
                 for (int j = 0; j < connected[i].Count; j++)
                 {
                     Point temp = new Point((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale);
                     pts.Add(temp);
-                    //meshBuilder.AddBox(temp, 0.5, 0.5, 0);
                 }
-                //poly = new Polygon3D(polygon);
-                //FillPolygon(poly);
-
-                //meshBuilder.AddPolygon(polygon);
                 polygonPoints.Add(pts);
             }
             
@@ -63,12 +61,15 @@ namespace CompFab_Slicer
             return polygonPoints;
         }
 
-        public void FillPolygon(Polygon3D p3)
+        private Paths erodePerimeter(Paths polygons)
         {
-            HelixToolkit.Wpf.Polygon polygon = p3.Flatten();
-            var triangleIndexes = CuttingEarsTriangulator.Triangulate(polygon.Points);
+            Paths erodedPaths = new Paths();
+            ClipperOffset co = new ClipperOffset();
 
-            meshBuilder.Append(p3.Points, triangleIndexes);
+            co.AddPaths(polygons, JoinType.jtRound, EndType.etClosedPolygon);
+            co.Execute(ref erodedPaths, (-0.2*scale));
+
+            return erodedPaths;
         }
 
         private Paths connectPoints(Paths slice)
@@ -151,114 +152,6 @@ namespace CompFab_Slicer
             return connectedPolygons;
         }
 
-        /*private Paths connectPoints(Paths slice)
-        {
-            Paths connectedPolygons = new Paths();
-            double dist, smallestDist = double.MaxValue;
-            int smallestIndex = -1;
-
-            for(int i = 0; i < slice.Count; i++)
-            {
-                Path pts = new Path();
-                Path result = new Path();
-                if(slice[i].Count > 0)
-                {
-                    pts = slice[i];
-                    IntPoint startPt = pts[0];
-                    IntPoint endPt = pts[1];
-
-                    result.Add(startPt);
-                    result.Add(endPt);
-
-                    pts.Remove(startPt);
-                    pts.Remove(endPt);
-
-                    while (pts.Count > 0)
-                    {
-                        smallestDist = double.MaxValue;
-                        for(int j = 0; j < pts.Count; j++)
-                        {
-                            if (startPt != pts[j] || endPt != pts[j])
-                            {
-                                dist = calculateEuclideanDistance(endPt, pts[j]);
-
-                                if (dist < smallestDist)
-                                {
-                                    smallestDist = dist;
-                                    smallestIndex = j;
-                                }
-                            }
-                        }
-
-                        if (smallestIndex % 2 == 0)
-                        {
-                            result.Add(pts[smallestIndex]);
-                            result.Add(pts[smallestIndex + 1]);
-                            startPt = pts[smallestIndex];
-                            endPt = pts[smallestIndex + 1];
-                        }
-                        else
-                        {
-                            result.Add(pts[smallestIndex]);
-                            result.Add(pts[smallestIndex - 1]);
-                            startPt = pts[smallestIndex];
-                            endPt = pts[smallestIndex - 1];
-                        }
-                        pts.Remove(startPt);
-                        pts.Remove(endPt);
-                    }
-                    connectedPolygons.Add(result);
-                }
-            }
-
-            return connectedPolygons;
-        }*/
-
-        /*private Paths connectPoints(Paths slice)
-        {
-            Paths connectedPolygons = new Paths();
-            double smallestDist = double.MaxValue, dist;
-            int smallestIndex = -1;
-
-            for (int i = 0; i < slice.Count; i++)
-            {
-                Path points = new Path();
-                if (slice[i].Count > 0)
-                {
-                    points = slice[i];
-                    points = points.Distinct().ToList();
-                    Path polygon = new Path();
-                    IntPoint startPoint = points[0];
-                    polygon.Add(startPoint);
-                    while (points.Count > 1)
-                    {
-                        smallestDist = double.MaxValue;
-                        for (int k = 0; k < points.Count; k++)
-                        {
-                            if (startPoint != points[k])
-                            {
-                                dist = calculateEuclideanDistance(startPoint, points[k]);
-
-                                if (dist < smallestDist)
-                                {
-                                    smallestDist = dist;
-                                    smallestIndex = k;
-                                }
-                            }
-                        }
-                        polygon.Add(points[smallestIndex]);
-                        IntPoint temp = startPoint;
-                        startPoint = points[smallestIndex];
-                        points.Remove(temp);
-                    }
-                    connectedPolygons.Add(polygon);
-                }
-            }
-
-
-            return connectedPolygons;
-        }*/
-
         private double calculateEuclideanDistance(IntPoint pt1, IntPoint pt2)
         {
             double result;
@@ -293,25 +186,9 @@ namespace CompFab_Slicer
             return contours;
         }
 
-        private Paths createClippingPlane(int scale)
-        {
-            Paths zPlane = new Paths();
-            Path cPlane = new Path();
-
-            cPlane.Add(new IntPoint(-1000 * scale, -1000 * scale));
-            cPlane.Add(new IntPoint(-1000 * scale, 1000 * scale));
-            cPlane.Add(new IntPoint(1000 * scale, 1000 * scale));
-            cPlane.Add(new IntPoint(1000 * scale, -1000 * scale));
-
-            zPlane.Add(cPlane);
-
-            return zPlane;
-        }
-
         private void checkIntersection(IntPoint pt1, IntPoint pt2, long zPlane, ref Path intersectingContours)
         {
             long zMax, zMin;
-            //zPlane = (long)(0.2 * scale);
 
             if (pt1.Z != pt2.Z)
             {
@@ -349,7 +226,7 @@ namespace CompFab_Slicer
         {
             Paths intersectingContours = new Paths();
             Path intersectingPoints = new Path();
-            long zPlane = (long)((layerNr * layer_height * scale) + 1);
+            long zPlane = (long)((layerNr * layer_height * scale) - ((layer_height/2 * scale)));
 
             for (int i = 0; i < contours.Count; i++)
             {
@@ -362,7 +239,7 @@ namespace CompFab_Slicer
             return intersectingContours;
         }
 
-        private Paths intersect(Paths contours, Paths clip, double layer_height, int scale)
+        /*private Paths intersect(Paths contours, Paths clip, double layer_height, int scale)
         {
             Paths solution = new Paths();
 
@@ -378,10 +255,7 @@ namespace CompFab_Slicer
 
             solution = Clipper.PolyTreeToPaths(pSol);
 
-            //solution = Clipper.CleanPolygons(solution);
-            //solution = Clipper.SimplifyPolygons(solution);
-
             return solution;
-        }
+        }*/
     }
 }
