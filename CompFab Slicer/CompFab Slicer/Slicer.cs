@@ -24,7 +24,7 @@ namespace CompFab_Slicer
             this.modelMesh = modelMesh;
         }
 
-        public List<PointCollection> Slice()
+        public List<Point3DCollection> Slice()
         {
             PolyTree contours = createContoursTree(scale, modelMesh);
 
@@ -35,7 +35,7 @@ namespace CompFab_Slicer
 
             Paths eroded = erodePerimeter(connected);
 
-            List<PointCollection> polygonPoints = new List<PointCollection>();
+            List<Point3DCollection> polygonPoints = new List<Point3DCollection>();
 
             
             for(int i = 0; i < eroded.Count; i++)
@@ -46,10 +46,10 @@ namespace CompFab_Slicer
 
             for (int i = 0; i < connected.Count; i++)
             {
-                PointCollection pts = new PointCollection();
+                Point3DCollection pts = new Point3DCollection();
                 for (int j = 0; j < connected[i].Count; j++)
                 {
-                    Point temp = new Point((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale);
+                    Point3D temp = new Point3D((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale, 15);
                     pts.Add(temp);
                 }
                 polygonPoints.Add(pts);

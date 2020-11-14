@@ -47,6 +47,7 @@ namespace CompFab_Slicer
         public void ShowSTL(string file)
         {
             var visualModel = VisualModel;
+
             Model3DGroup modelGroup = new Model3DGroup();
 
             StLReader reader = new StLReader();
@@ -56,7 +57,15 @@ namespace CompFab_Slicer
 
             geoModel.Material = yellowMaterial;
             geoModel.BackMaterial = insideMaterial;
-            geoModel.Transform = new TranslateTransform3D(0, 0, 0);
+
+            Rect3D bounds = geoModel.Bounds;
+            double centerX = bounds.X + bounds.SizeX / 2;
+            double centerY = bounds.Y + bounds.SizeY / 2;
+            double centerZ = bounds.Z;
+
+            geoModel.Transform = new TranslateTransform3D(-centerX, -centerY, -centerZ);
+            //geoModel.Transform = new ScaleTransform3D(1, 1, 1, centerX, centerY, centerZ);
+
             modelGroup.Children.Add(geoModel);
 
             visualModel.Content = modelGroup;
@@ -88,37 +97,86 @@ namespace CompFab_Slicer
         {
             if(modelMesh != null)
             {
-                canvas.Children.Clear();
+                //layerView.Children.Clear();
                 MeshBuilder meshBuilder = new MeshBuilder(false, false, false);
                 Model3DGroup modelGroup = new Model3DGroup();
 
                 Slicer slicer = new Slicer(meshBuilder, modelMesh);
                 
-                List<PointCollection> polygons = slicer.Slice();
+                List<Point3DCollection> polygons = slicer.Slice();
 
                 SolidColorBrush b = new SolidColorBrush();
                 b.Color = Colors.DarkGray;
                 SolidColorBrush fillB = new SolidColorBrush();
                 //fillB.Color = Colors.LightBlue;
 
-                for(int i = 0; i < polygons.Count(); i++)
+                //layerView.Camera.LookDirection = new Vector3D(0,0,-1);
+                layerView.Visibility = Visibility.Visible;
+                canvasSplitter.Visibility = Visibility.Visible;
+                modelView.SetValue(Grid.ColumnSpanProperty, 1);
+
+
+                var meshBuilder2 = new MeshBuilder(false, false, false);
+
+
+                for (int i = 0; i < polygons.Count(); i++)
                 {
-                    System.Windows.Shapes.Polygon p = new System.Windows.Shapes.Polygon();
+                    var p = new HelixToolkit.Wpf.Polygon3D();
+
+                    for (int j = 0; j < polygons[i].Count(); j++)
+                    {
+                        p.Points.Add(polygons[i][j]);
+                    }
+
+                    //meshBuilder2.AddPolygon(p.Points);
+                    var flattened = p.Flatten();
+
+                    meshBuilder2.Append(p.Points, flattened.Triangulate());
+
+                    /*System.Windows.Shapes.Polygon p = new System.Windows.Shapes.Polygon();
                     p.Stroke = b;
                     p.Fill = fillB;
                     p.StrokeThickness = 0.05;
                     p.HorizontalAlignment = HorizontalAlignment.Center;
                     p.VerticalAlignment = VerticalAlignment.Center;
-                    p.RenderTransform = new ScaleTransform(-6, -6, 0, 20);
+                    p.RenderTransform = new ScaleTransform(-15, -15, 0, 10);
                     p.Margin = new Thickness(10);
                     
                     for(int j = 0; j < polygons[i].Count; j++)
                     {
                         p.Points.Add(polygons[i][j]);
                     }
-                    canvas.Children.Add(p);
+
+                    HelixToolkit.Wpf.Polygon p = new HelixToolkit.Wpf.Polygon();
+
+                    for (int j = 0; j < polygons[i].Count; j++)
+                    {
+                        p.Points.Add(polygons[i][j]);
+                    }
+                    
+
+                    var meshBuilder2 = new MeshBuilder(false, false);
+                    meshBuilder2.add*/
+
+
+
+                    //modelGroup.;
+                    //layerView.Children.Add(p);
+                    //Canvas.SetTop(p, 100);
+                    //Canvas.SetLeft(p, 400);
                 }
 
+                var layerModel = LayerModel;
+                GeometryModel3D geomModel = new GeometryModel3D { Geometry = meshBuilder2.ToMesh(), Material = yellowMaterial, BackMaterial = insideMaterial };
+                Rect3D bounds = geomModel.Bounds;
+                double centerX = bounds.X + bounds.SizeX / 2;
+                double centerY = bounds.Y + bounds.SizeY / 2;
+                double centerZ = bounds.Z;
+
+                geomModel.Transform = new TranslateTransform3D(-centerX, -centerY, -centerZ);
+
+                modelGroup.Children.Add(geomModel);
+                layerModel.Content = modelGroup;
             }
             else
             {
@@ -134,6 +192,11 @@ namespace CompFab_Slicer
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
         {
         
+        }
+
+        private void modelView_CameraChanged(object sender, RoutedEventArgs e)
+        {
+            CameraHelper.Copy(modelView.Camera, layerView.Camera);
         }
     }
 }

@@ -239,22 +239,22 @@
 
             <Grid >
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.5*"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="5"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
                     <ColumnDefinition Width="1"></ColumnDefinition>
-                    <ColumnDefinition Width="0.3*"></ColumnDefinition>
-                    <ColumnDefinition Width="1"></ColumnDefinition>
-                    <ColumnDefinition Width="0.2*"></ColumnDefinition>
+                    <ColumnDefinition Width="255"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
 
                 <!--  The HelixViewport3D supports camera manipulation, and can be used just like the Viewport3D  -->
-                <HelixToolkit:HelixViewport3D Grid.Column="0" Grid.Row="0" ShowFrameRate="True" ZoomExtentsWhenLoaded="True" ZoomAroundMouseDownPoint="True" RotateAroundMouseDownPoint="True" IsTopBottomViewOrientedToFrontBack="True" IsViewCubeEdgeClicksEnabled="True">
-
+                <HelixToolkit:HelixViewport3D x:Name="modelView" CameraChanged="modelView_CameraChanged" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" ShowFrameRate="True" ZoomExtentsWhenLoaded="True" ZoomAroundMouseDownPoint="True" RotateAroundMouseDownPoint="True" IsTopBottomViewOrientedToFrontBack="True" IsViewCubeEdgeClicksEnabled="True">
+          
 
                     <!--  Remember to add light to the scene  -->
                     <HelixToolkit:SunLight />
 
                     <!--  The content of this visual is defined in MainViewModel.cs  -->
-                    <ModelVisual3D x:Name="VisualModel" Content="{Binding Model}" />
+                    <ModelVisual3D x:Name="VisualModel" />
 
                     <!--  You can also add elements here in the xaml  -->
                     <!-- TODO laat deze aanpassen aan de grootte van het object!!-->
@@ -266,8 +266,28 @@
                 Thickness="0.01" />
 
                 </HelixToolkit:HelixViewport3D>
-                <Canvas x:Name="canvas" Grid.Column="2" Grid.Row="0">
-                </Canvas>
+
+                <!--  The HelixViewport3D supports camera manipulation, and can be used just like the Viewport3D  -->
+                <HelixToolkit:HelixViewport3D x:Name="layerView" Grid.Column="2" Visibility="Collapsed" ShowViewCube="False"  Grid.ColumnSpan="1" ShowFrameRate="False" ZoomExtentsWhenLoaded="False" ZoomAroundMouseDownPoint="False" RotateAroundMouseDownPoint="False" IsTopBottomViewOrientedToFrontBack="False" IsViewCubeEdgeClicksEnabled="False">
+
+
+                    <!--  Remember to add light to the scene  -->
+                    <HelixToolkit:SunLight />
+
+                    <ModelVisual3D x:Name="LayerModel"/>
+                    
+                    <!--  You can also add elements here in the xaml  -->
+                    <!-- TODO laat deze aanpassen aan de grootte van het object!!-->
+                    <HelixToolkit:GridLinesVisual3D
+                Width="30"
+                Length="30"
+                MajorDistance="1"
+                MinorDistance="1"
+                Thickness="0.01" />
+
+                </HelixToolkit:HelixViewport3D>
+
+                <GridSplitter x:Name="canvasSplitter" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Visibility="Collapsed"/>
                 <Button Content="Slice!" Grid.Column="4" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100" Click="Slice_Click"/>
 
                 <Label Content="number of shells:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>
@@ -299,7 +319,6 @@
                 <TextBlock Grid.Column="4" Background="LightGray" TextAlignment="Center" Margin="30,235,30,0" TextWrapping="Wrap"  Text="Material &amp; speed" VerticalAlignment="Top"/>
                 <TextBlock Grid.Column="4" Background="LightGray" TextAlignment="Center" Margin="30,320,30,0" TextWrapping="Wrap"  Text="Support" VerticalAlignment="Top"/>
 
-                <Rectangle Grid.Column="1" Fill="Black"/>
                 <Rectangle Grid.Column="3" Fill="Black"/>
             </Grid>
         </DockPanel>
