@@ -291,34 +291,41 @@
                 <GridSplitter x:Name="canvasSplitter" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Visibility="Collapsed"/>
                 <Button Content="Slice!" Grid.Column="5" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100" Click="Slice_Click"/>
 
-                <Label Content="number of shells:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,137,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
-
-                <Label Content="nozzle diameter:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,75,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,77,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
-
                 <Label Content="layer height:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,50,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,52,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+                <TextBox x:Name="layerHeightTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,52,30,0" TextWrapping="Wrap" Text="0,2" VerticalAlignment="Top" Width="65"/>
+                
+                <Label Content="nozzle diameter:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,75,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="nozzleDiameterTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,77,30,0" TextWrapping="Wrap" Text="0,4" VerticalAlignment="Top" Width="65"/>
 
-                <Label Content="printing temperature:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,255,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,257,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
-
-                <Label Content="printing speed:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,280,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,282,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
-
-
+                <Label Content="number of shells:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="numberOfShellsTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,137,30,0" TextWrapping="Wrap" Text="3" VerticalAlignment="Top" Width="65"/>
+                
                 <Label Content="infill density:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,195,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="0,197,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+                <TextBox x:Name="infillTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="0,197,30,0" TextWrapping="Wrap" Text="15" VerticalAlignment="Top" Width="65"/>
 
+                <Label Content="initial temperature:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,255,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="initialTemperatureTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,257,30,0" TextWrapping="Wrap" Text="200" VerticalAlignment="Top" Width="65"/>
+               
+                <Label Content="initial bed temp:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,280,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="initialBedTempTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,282,30,0" TextWrapping="Wrap" Text="60" VerticalAlignment="Top" Width="65"/>
 
-                <Label Content="enable supports:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,340,0,0" VerticalAlignment="Top"/>
-                <CheckBox Content="" Grid.Column="5" HorizontalAlignment="Right" Margin="203,347,30,0" VerticalAlignment="Top"/>
+                <Label Content="printing temperature:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,305,0,0" VerticalAlignment="Top"/>
+                <TextBox  x:Name="printingTemperatureTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,307,30,0" TextWrapping="Wrap" Text="195" VerticalAlignment="Top" Width="65"/>
+
+                <Label Content="bed temperature:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,330,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="bedTemperatureTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,332,30,0" TextWrapping="Wrap" Text="60" VerticalAlignment="Top" Width="65"/>
+
+                <Label Content="printing speed:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,355,0,0" VerticalAlignment="Top"/>
+                <TextBox x:Name="printingSpeedTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,357,30,0" TextWrapping="Wrap" Text="40" VerticalAlignment="Top" Width="65"/>
+
+                <Label Content="enable supports:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,415,0,0" VerticalAlignment="Top"/>
+                <CheckBox Content="" Grid.Column="5" HorizontalAlignment="Right" Margin="203,422,30,0" VerticalAlignment="Top"/>
 
                 <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,30,30,0" TextWrapping="Wrap"  Text="Quality" VerticalAlignment="Top"/>
                 <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,115,30,0" TextWrapping="Wrap"  Text="Shell" VerticalAlignment="Top"/>
                 <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,175,30,0" TextWrapping="Wrap"  Text="Infill" VerticalAlignment="Top"/>
                 <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,235,30,0" TextWrapping="Wrap"  Text="Material &amp; speed" VerticalAlignment="Top"/>
-                <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,320,30,0" TextWrapping="Wrap"  Text="Support" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,395,30,0" TextWrapping="Wrap"  Text="Support" VerticalAlignment="Top"/>
 
                 <Rectangle Grid.Column="4" Fill="Black"/>
                 <Slider x:Name="layerSlider" SmallChange="1" ValueChanged="layerSlider_ValueChanged" Value="0" Minimum="0" Grid.Column="3" Orientation="Vertical" Maximum="100"  HorizontalAlignment="Center"  VerticalAlignment="Center" Height="300"  Margin="0,0,5,0" Visibility="Collapsed"/>

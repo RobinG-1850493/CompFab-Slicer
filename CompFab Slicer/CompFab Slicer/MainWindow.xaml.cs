@@ -23,8 +23,19 @@ namespace CompFab_Slicer
     {
         public MeshGeometry3D modelMesh;
         public List<List<Point3DCollection>> slicedPolygons;
+        
         Material yellowMaterial = MaterialHelper.CreateMaterial(Colors.Yellow);
         Material insideMaterial = MaterialHelper.CreateMaterial(Colors.Gray);
+
+        double layerHeight;
+        double nozzleDiameter;
+        double numberOfShells;
+        double infill;
+        double initTemp;
+        double initBedTemp;
+        double printTemp;
+        double bedTemp;
+        double printingSpeed;
 
         public MainWindow()
         {
@@ -53,7 +64,6 @@ namespace CompFab_Slicer
             StLReader reader = new StLReader();
             Model3DGroup group = reader.Read(file);
             GeometryModel3D geoModel = FindLargestModel(group);
-            modelMesh = geoModel.Geometry as MeshGeometry3D;
 
             geoModel.Material = yellowMaterial;
             geoModel.BackMaterial = insideMaterial;
@@ -65,6 +75,7 @@ namespace CompFab_Slicer
 
             geoModel.Transform = new TranslateTransform3D(-centerX, -centerY, -centerZ);
             //geoModel.Transform = new ScaleTransform3D(1, 1, 1, centerX, centerY, centerZ);
+            modelMesh = geoModel.Geometry as MeshGeometry3D;
 
             modelGroup.Children.Add(geoModel);
 
@@ -95,7 +106,9 @@ namespace CompFab_Slicer
 
         private void Slice_Click(object sender, RoutedEventArgs e)
         {
-            if(modelMesh != null)
+            LoadSettingsFromTextBox();
+
+            if (modelMesh != null)
             {
                 //layerView.Children.Clear();
                 MeshBuilder meshBuilder = new MeshBuilder(false, false, false);
@@ -117,7 +130,7 @@ namespace CompFab_Slicer
                 layerView.Visibility = Visibility.Visible;
                 canvasSplitter.Visibility = Visibility.Visible;
                 layerSlider.Visibility = Visibility.Visible;
-                layerSlider.Maximum = layerCount + 1;
+                layerSlider.Maximum = layerCount;
                 
                 modelView.SetValue(Grid.ColumnSpanProperty, 1);
                 layerSlider.Minimum = 1;
@@ -191,14 +204,34 @@ namespace CompFab_Slicer
             } 
         }
 
+        private void LoadSettingsFromTextBox()
+        {
+            layerHeight = Convert.ToDouble(layerHeightTextBox.Text);
+            nozzleDiameter = Convert.ToDouble(nozzleDiameterTextBox.Text);
+            numberOfShells = Convert.ToDouble(numberOfShellsTextBox.Text);
+            infill = Convert.ToDouble(infillTextBox.Text);
+            initTemp = Convert.ToDouble(initialTemperatureTextBox.Text);
+            initBedTemp = Convert.ToDouble(initialBedTempTextBox.Text);
+            printTemp = Convert.ToDouble(printingTemperatureTextBox.Text);
+            bedTemp = Convert.ToDouble(bedTemperatureTextBox.Text);
+            printingSpeed = Convert.ToDouble(printingSpeedTextBox.Text);
+        }
+
         private void SaveMenuItem_Click(object sender, RoutedEventArgs e)
         {
+            SaveFileDialog saveGcode = new SaveFileDialog();
+            saveGcode.Filter = "gcode files (*.gcode) | *.gcode";
 
+            if (saveGcode.ShowDialog() == true)
+            {
+                string filePath = @saveGcode.FileName;
+                GcodeGenerator generator = new GcodeGenerator(slicedPolygons ,filePath, layerHeight, nozzleDiameter, initTemp, initBedTemp, printTemp, bedTemp, printingSpeed);
+            }
         }
 
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
         {
-        
+            this.Close();
         }
 
         private void modelView_CameraChanged(object sender, RoutedEventArgs e)
@@ -227,11 +260,11 @@ namespace CompFab_Slicer
                         }
 
 
-                        if(p.Points.Count() > 2)
-                        {
+                        //if(p.Points.Count() > 2)
+                        //{
                             var flattened = p.Flatten();
                             meshBuilder2.Append(p.Points, flattened.Triangulate());
-                        }
+                        //}
                         
 
                         //meshBuilder2.AddPolygon(p.Points);

@@ -31,7 +31,7 @@ namespace CompFab_Slicer
 
             List<List<Point3DCollection>> polygonsPerLayer = new List<List<Point3DCollection>>();
             
-            for (double z = 0; z <= layerCount; z++)
+            for (double z = 1; z <= layerCount; z++)
             {
                 Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), z, 0.2, scale);
                 Paths connected = connectPoints(intersectingPoints);
