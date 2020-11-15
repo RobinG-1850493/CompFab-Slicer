@@ -24,41 +24,50 @@ namespace CompFab_Slicer
             this.modelMesh = modelMesh;
         }
 
-        public List<Point3DCollection> Slice()
+        public List<List<Point3DCollection>> Slice(double layerCount)
         {
             PolyTree contours = createContoursTree(scale, modelMesh);
-
-            Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), 15, 0.2, scale);
-            Paths connected = connectPoints(intersectingPoints);
-
-            connected = Clipper.CleanPolygons(connected);
-
-            Paths eroded = erodePerimeter(connected);
-
-            List<Point3DCollection> polygonPoints = new List<Point3DCollection>();
-
             
-            for(int i = 0; i < eroded.Count; i++)
+
+            List<List<Point3DCollection>> polygonsPerLayer = new List<List<Point3DCollection>>();
+            
+            for (double z = 0; z <= layerCount; z++)
             {
-                connected.Add(eroded[i]);
-            }
+                Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), z, 0.2, scale);
+                Paths connected = connectPoints(intersectingPoints);
+
+                connected = Clipper.CleanPolygons(connected);
+
+                Paths eroded = erodePerimeter(connected);
+
+                List<Point3DCollection> polygonPoints = new List<Point3DCollection>();
 
 
-            for (int i = 0; i < connected.Count; i++)
-            {
-                Point3DCollection pts = new Point3DCollection();
-                for (int j = 0; j < connected[i].Count; j++)
+                for (int i = 0; i < eroded.Count; i++)
                 {
-                    Point3D temp = new Point3D((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale, 15);
-                    pts.Add(temp);
+                    connected.Add(eroded[i]);
                 }
-                polygonPoints.Add(pts);
+
+
+                for (int i = 0; i < connected.Count; i++)
+                {
+                    Point3DCollection pts = new Point3DCollection();
+                    for (int j = 0; j < connected[i].Count; j++)
+                    {
+                        Point3D temp = new Point3D((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale, z*0.2);
+                        pts.Add(temp);
+                    }
+                    polygonPoints.Add(pts);
+                }
+
+                polygonsPerLayer.Add(polygonPoints);
             }
+            
             
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
 
-            return polygonPoints;
+            return polygonsPerLayer;
         }
 
         private Paths erodePerimeter(Paths polygons)
@@ -222,7 +231,7 @@ namespace CompFab_Slicer
         }
 
 
-        private Paths getIntersectingContours(Paths contours, int layerNr, double layer_height, int scale)
+        private Paths getIntersectingContours(Paths contours, double layerNr, double layer_height, int scale)
         {
             Paths intersectingContours = new Paths();
             Path intersectingPoints = new Path();

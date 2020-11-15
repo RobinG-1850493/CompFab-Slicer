@@ -242,12 +242,13 @@
                     <ColumnDefinition Width="*"></ColumnDefinition>
                     <ColumnDefinition Width="5"></ColumnDefinition>
                     <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="25"></ColumnDefinition>
                     <ColumnDefinition Width="1"></ColumnDefinition>
                     <ColumnDefinition Width="255"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
 
                 <!--  The HelixViewport3D supports camera manipulation, and can be used just like the Viewport3D  -->
-                <HelixToolkit:HelixViewport3D x:Name="modelView" CameraChanged="modelView_CameraChanged" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" ShowFrameRate="True" ZoomExtentsWhenLoaded="True" ZoomAroundMouseDownPoint="True" RotateAroundMouseDownPoint="True" IsTopBottomViewOrientedToFrontBack="True" IsViewCubeEdgeClicksEnabled="True">
+                <HelixToolkit:HelixViewport3D x:Name="modelView" CameraChanged="modelView_CameraChanged" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="4" ShowFrameRate="True" ZoomExtentsWhenLoaded="True" ZoomAroundMouseDownPoint="True" RotateAroundMouseDownPoint="True" IsTopBottomViewOrientedToFrontBack="True" IsViewCubeEdgeClicksEnabled="True">
           
 
                     <!--  Remember to add light to the scene  -->
@@ -288,38 +289,40 @@
                 </HelixToolkit:HelixViewport3D>
 
                 <GridSplitter x:Name="canvasSplitter" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Visibility="Collapsed"/>
-                <Button Content="Slice!" Grid.Column="4" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100" Click="Slice_Click"/>
+                <Button Content="Slice!" Grid.Column="5" HorizontalAlignment="Left" Margin="74,515,0,0" VerticalAlignment="Top" Width="100" Click="Slice_Click"/>
 
-                <Label Content="number of shells:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="4" HorizontalAlignment="Right" Height="23" Margin="158,137,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+                <Label Content="number of shells:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,135,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,137,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
 
-                <Label Content="nozzle diameter:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,75,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="4" HorizontalAlignment="Right" Height="23" Margin="158,77,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+                <Label Content="nozzle diameter:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,75,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,77,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
 
-                <Label Content="layer height:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,50,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="4" HorizontalAlignment="Right" Height="23" Margin="158,52,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+                <Label Content="layer height:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,50,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,52,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
 
-                <Label Content="printing temperature:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,255,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="4" HorizontalAlignment="Right" Height="23" Margin="158,257,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+                <Label Content="printing temperature:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,255,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,257,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
 
-                <Label Content="printing speed:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,280,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="4" HorizontalAlignment="Right" Height="23" Margin="158,282,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
-
-
-                <Label Content="infill density:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,195,0,0" VerticalAlignment="Top"/>
-                <TextBox Grid.Column="4" HorizontalAlignment="Right" Height="23" Margin="0,197,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
+                <Label Content="printing speed:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,280,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="158,282,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
 
 
-                <Label Content="enable supports:" Grid.Column="4" HorizontalAlignment="Left" Margin="30,340,0,0" VerticalAlignment="Top"/>
-                <CheckBox Content="" Grid.Column="4" HorizontalAlignment="Right" Margin="203,347,30,0" VerticalAlignment="Top"/>
+                <Label Content="infill density:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,195,0,0" VerticalAlignment="Top"/>
+                <TextBox Grid.Column="5" HorizontalAlignment="Right" Height="23" Margin="0,197,30,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="65"/>
 
-                <TextBlock Grid.Column="4" Background="LightGray" TextAlignment="Center" Margin="30,30,30,0" TextWrapping="Wrap"  Text="Quality" VerticalAlignment="Top"/>
-                <TextBlock Grid.Column="4" Background="LightGray" TextAlignment="Center" Margin="30,115,30,0" TextWrapping="Wrap"  Text="Shell" VerticalAlignment="Top"/>
-                <TextBlock Grid.Column="4" Background="LightGray" TextAlignment="Center" Margin="30,175,30,0" TextWrapping="Wrap"  Text="Infill" VerticalAlignment="Top"/>
-                <TextBlock Grid.Column="4" Background="LightGray" TextAlignment="Center" Margin="30,235,30,0" TextWrapping="Wrap"  Text="Material &amp; speed" VerticalAlignment="Top"/>
-                <TextBlock Grid.Column="4" Background="LightGray" TextAlignment="Center" Margin="30,320,30,0" TextWrapping="Wrap"  Text="Support" VerticalAlignment="Top"/>
 
-                <Rectangle Grid.Column="3" Fill="Black"/>
+                <Label Content="enable supports:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,340,0,0" VerticalAlignment="Top"/>
+                <CheckBox Content="" Grid.Column="5" HorizontalAlignment="Right" Margin="203,347,30,0" VerticalAlignment="Top"/>
+
+                <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,30,30,0" TextWrapping="Wrap"  Text="Quality" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,115,30,0" TextWrapping="Wrap"  Text="Shell" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,175,30,0" TextWrapping="Wrap"  Text="Infill" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,235,30,0" TextWrapping="Wrap"  Text="Material &amp; speed" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,320,30,0" TextWrapping="Wrap"  Text="Support" VerticalAlignment="Top"/>
+
+                <Rectangle Grid.Column="4" Fill="Black"/>
+                <Slider x:Name="layerSlider" SmallChange="1" ValueChanged="layerSlider_ValueChanged" Value="0" Minimum="0" Grid.Column="3" Orientation="Vertical" Maximum="100"  HorizontalAlignment="Center"  VerticalAlignment="Center" Height="300"  Margin="0,0,5,0" Visibility="Collapsed"/>
+
             </Grid>
         </DockPanel>
     </Grid>
