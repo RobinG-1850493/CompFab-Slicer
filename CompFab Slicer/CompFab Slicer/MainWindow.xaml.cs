@@ -26,6 +26,8 @@ namespace CompFab_Slicer
         
         Material yellowMaterial = MaterialHelper.CreateMaterial(Colors.Yellow);
         Material insideMaterial = MaterialHelper.CreateMaterial(Colors.Gray);
+        System.Windows.Shapes.Polygon p2 = new System.Windows.Shapes.Polygon();
+
 
         double layerHeight;
         double nozzleDiameter;
@@ -128,8 +130,11 @@ namespace CompFab_Slicer
 
                 //layerView.Camera.LookDirection = new Vector3D(0,0,-1);
                 layerView.Visibility = Visibility.Visible;
-                canvasSplitter.Visibility = Visibility.Visible;
+                canvasHorizontalSplitter.Visibility = Visibility.Visible;
                 layerSlider.Visibility = Visibility.Visible;
+                canvasVerticalSplitter.Visibility = Visibility.Visible;
+                //viewBox2D.Visibility = Visibility.Visible;
+                setup2DCanvas();
                 layerSlider.Maximum = layerCount;
                 
                 modelView.SetValue(Grid.ColumnSpanProperty, 1);
@@ -239,30 +244,91 @@ namespace CompFab_Slicer
             CameraHelper.Copy(modelView.Camera, layerView.Camera);
         }
 
+        private void setup2DCanvas()
+        {
+            if (!gridView.Children.Contains(p2))
+            {
+                SolidColorBrush b = new SolidColorBrush();
+                b.Color = Colors.DarkGray;
+                SolidColorBrush fillB = new SolidColorBrush();
+                fillB.Color = Colors.DarkGray;
+
+                p2.Stroke = b;
+                //p2.Fill = fillB;
+                p2.HorizontalAlignment = HorizontalAlignment.Center;
+                p2.VerticalAlignment = VerticalAlignment.Center;
+                p2.StrokeThickness = 0.2;
+                p2.Margin = new Thickness(10);
+
+                Grid.SetRow(p2, 2);
+                Grid.SetColumn(p2, 2);
+
+                gridView.Children.Add(p2);
+            }
+            
+
+        }
+
+        /*public static Point GetCentroid(PointCollection nodes, int count)
+        {
+            int x = 0, y = 0, area = 0, k;
+            Point a, b = nodes[count - 1];
+
+            for (int i = 0; i < count; i++)
+            {
+                a = nodes[i];
+
+                k = (int)(a.Y * b.X - a.X * b.Y);
+                area += k;
+                x += (int)(a.X + b.X) * k;
+                y += (int)(a.Y + b.Y) * k;
+
+                b = a;
+            }
+            area *= 3;
+
+            return new Point(x /= area, y /= area);
+        }*/
+
         private void layerSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if(layerSlider.Value != 0)
+            
+
+
+            if (layerSlider.Value != 0)
             {
                 var meshBuilder2 = new MeshBuilder(false, false, false);
                 Model3DGroup modelGroup = new Model3DGroup();
+                
+
+
 
                 for (int z = 0; z < layerSlider.Value; z++)
                 {
+                    p2.Points.Clear();
                     for (int i = 0; i < slicedPolygons[z].Count(); i++)
                     {
 
                         var p = new HelixToolkit.Wpf.Polygon3D();
 
-
                         for (int j = 0; j < slicedPolygons[z][i].Count(); j++)
                         {
                             p.Points.Add(slicedPolygons[z][i][j]);
+                            Point test = new Point(slicedPolygons[z][i][j].X, slicedPolygons[z][i][j].Y);
+                            p2.Points.Add(test);
                         }
 
+                        double widthOfCanvas = gridView.ColumnDefinitions[2].ActualWidth;
+                        double heightOfCanvas = gridView.RowDefinitions[1].ActualHeight;
+
+
+                        //Point centroid = GetCentroid(p2.Points, p2.Points.Count);
+                        //p2.RenderTransform = new ScaleTransform(2, 2, centroid.X, centroid.Y);
+                        p2.RenderTransform = new ScaleTransform(2, 2, 0, 0);
 
                         //if(p.Points.Count() > 2)
                         //{
-                            var flattened = p.Flatten();
+                        var flattened = p.Flatten();
                             meshBuilder2.Append(p.Points, flattened.Triangulate());
                         //}
                         
