@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media.Media3D;
 
 namespace CompFab_Slicer
@@ -21,7 +22,7 @@ namespace CompFab_Slicer
 
             writer = new StreamWriter(filePath);
             WriteStaticEnder3Code(initTemp, initBedTemp);
-            WriteGcode(layerHeight, nozzleDiameter);
+            WriteGcode(layerHeight, nozzleDiameter, printTemp, bedTemp, printingSpeed);
 
             writer.Close();
         }
@@ -34,9 +35,15 @@ namespace CompFab_Slicer
             return lengthToPush;
         }
 
-        private void WriteGcode(double layerHeight, double nozzleDiameter)
+        private void WriteGcode(double layerHeight, double nozzleDiameter, double temperature, double bedTemperature, double printingSpeed)
         {
 
+        }
+
+        private double CalculateDistanceBetweenTwoPoints(Point p1, Point p2)
+        {
+            double distance = Math.Sqrt((Math.Pow((p1.X - p2.X), 2) + Math.Pow((p1.Y - p2.Y), 2)));
+            return distance;
         }
 
         private void WriteStaticEnder3Code( double initTemp, double initBedTemp)
