@@ -17,7 +17,7 @@ namespace CompFab_Slicer
         MeshBuilder meshBuilder;
         MeshGeometry3D modelMesh;
 
-        int scale = 10000;
+        static int scale = 10000;
         public Slicer(MeshBuilder meshBuilder, MeshGeometry3D modelMesh)
         {
             this.meshBuilder = meshBuilder;

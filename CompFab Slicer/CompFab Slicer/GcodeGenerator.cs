@@ -19,10 +19,11 @@ namespace CompFab_Slicer
         {
             this.model = model;
             this.filePath = filePath;
+            double correctedSpeed = printingSpeed * 60; // convert mm/s to mm/m
 
             writer = new StreamWriter(filePath);
             WriteStaticEnder3Code(initTemp, initBedTemp);
-            WriteGcode(layerHeight, nozzleDiameter, printTemp, bedTemp, printingSpeed);
+            WriteGcode(layerHeight, nozzleDiameter, printTemp, bedTemp, correctedSpeed);
 
             writer.Close();
         }
@@ -37,7 +38,39 @@ namespace CompFab_Slicer
 
         private void WriteGcode(double layerHeight, double nozzleDiameter, double temperature, double bedTemperature, double printingSpeed)
         {
+            WriteOneLayer(0, layerHeight, nozzleDiameter, printingSpeed);
+        }
 
+        private void WriteOneLayer(int layer, double layerHeight, double nozzleDiameter, double printingSpeed)
+        {
+            double extrusion = 0;
+            for(int i = 0; i < model[layer].Count; i++)
+            {
+                Point previousPosition = new Point();
+                Point currentPosition = new Point();
+                double length;
+                
+                for(int j = 0; j < model[layer][i].Count; j++)
+                {
+                    if(j == 0)
+                    {
+                        previousPosition.X = model[layer][i][j].X;
+                        previousPosition.Y = model[layer][i][j].Y;
+                        
+                        writer.WriteLine("G0 X" + model[layer][i][j].X + " Y" + model[layer][i][j].Y);
+                    }
+                    else
+                    {
+                        currentPosition.X = model[layer][i][j].X;
+                        currentPosition.Y = model[layer][i][j].Y;
+                        length = CalculateDistanceBetweenTwoPoints(previousPosition, currentPosition);
+
+                        extrusion = CalculateExtrusion(layerHeight, nozzleDiameter, length);
+                        writer.WriteLine("G1 X" + model[layer][i][j].X + " Y" + model[layer][i][j].Y + " E" + extrusion);
+                    }
+                }
+                
+            }
         }
 
         private double CalculateDistanceBetweenTwoPoints(Point p1, Point p2)

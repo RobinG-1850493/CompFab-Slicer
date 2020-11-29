@@ -342,7 +342,7 @@
                 <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,395,30,0" TextWrapping="Wrap"  Text="Support"  Grid.RowSpan="3" VerticalAlignment="Top"/>
 
                 <Rectangle Grid.Column="4" Fill="Black"  Grid.RowSpan="3"/>
-                <Slider x:Name="layerSlider" SmallChange="1"  Grid.RowSpan="3" ValueChanged="layerSlider_ValueChanged" Value="0" Minimum="0" Grid.Column="3" Orientation="Vertical" Maximum="100"  HorizontalAlignment="Center"  VerticalAlignment="Center" Height="300"  Margin="0,0,5,0" Visibility="Collapsed"/>
+                <Slider x:Name="layerSlider" SmallChange="1"  Grid.RowSpan="3" ValueChanged="LayerSlider_ValueChanged" Value="0" Minimum="0" Grid.Column="3" Orientation="Vertical" Maximum="100"  HorizontalAlignment="Center"  VerticalAlignment="Center" Height="300"  Margin="0,0,5,0" Visibility="Collapsed"/>
 
             </Grid>
         </DockPanel>
