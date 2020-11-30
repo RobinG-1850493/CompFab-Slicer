@@ -65,13 +65,47 @@ namespace CompFab_Slicer
             geoModel.BackMaterial = MaterialHelper.CreateMaterial(Colors.Gray);
 
             Rect3D bounds = geoModel.Bounds;
-            double centerX = bounds.X + bounds.SizeX / 2;
-            double centerY = bounds.Y + bounds.SizeY / 2;
-            double centerZ = bounds.Z;
+            double offsetX;
+            double offsetY;
+            double offsetZ;
 
-            geoModel.Transform = new TranslateTransform3D(-centerX, -centerY, -centerZ);
+            if(bounds.X <= 0)
+            {
+                offsetX = Math.Abs(bounds.X);
+            } else
+            {
+                offsetX = -Math.Abs(bounds.X);
+            }
+
+            if(bounds.Y <= 0)
+            {
+                offsetY = Math.Abs(bounds.Y);
+            } else
+            {
+                offsetY = -Math.Abs(bounds.Y);
+            }
+
+            if(bounds.Z <= 0)
+            {
+                offsetZ = Math.Abs(bounds.Z);
+            } else
+            {
+                offsetZ = -Math.Abs(bounds.Z);
+            }
             modelMesh = geoModel.Geometry as MeshGeometry3D;
+            
+            
+            for(int i = 0; i < modelMesh.Positions.Count; i++)
+            {
+                Point3D pos = modelMesh.Positions[i];
+                pos.X += offsetX;
+                pos.Y += offsetY;
+                pos.Z += offsetZ;
+                modelMesh.Positions[i] = pos;
+            }
 
+            geoModel.Geometry = modelMesh;
+            //geoModel.Bounds = modelMesh.Bounds;
             modelGroup.Children.Add(geoModel);
             visualModel.Content = modelGroup;
         }
