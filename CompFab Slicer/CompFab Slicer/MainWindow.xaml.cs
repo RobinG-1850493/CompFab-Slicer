@@ -22,7 +22,7 @@ namespace CompFab_Slicer
     public partial class MainWindow : Window
     {
         public MeshGeometry3D modelMesh;
-        public List<List<Point3DCollection>> slicedPolygons;
+        public List<List<List<Point3DCollection>>> slicedPolygons;
         private double layerHeight;
         private double nozzleDiameter;
         private double numberOfShells;
@@ -32,6 +32,8 @@ namespace CompFab_Slicer
         private double printTemp;
         private double bedTemp;
         private double printingSpeed;
+        double centerXOfModel;
+        double centerYOfModel;
         private System.Windows.Shapes.Polygon Canvas2DPolygon = new System.Windows.Shapes.Polygon();
 
         public MainWindow()
@@ -68,6 +70,8 @@ namespace CompFab_Slicer
             double offsetX;
             double offsetY;
             double offsetZ;
+            centerXOfModel = bounds.SizeX / 2;
+            centerYOfModel = bounds.SizeY / 2;
 
             if(bounds.X <= 0)
             {
@@ -144,7 +148,7 @@ namespace CompFab_Slicer
                 Rect3D bounds = modelMesh.Bounds;
                 double layerCount = bounds.SizeZ/0.2;
 
-                slicedPolygons = slicer.Slice(layerCount);
+                slicedPolygons = slicer.Slice(layerCount, layerHeight, numberOfShells);
                 ShowSlicedWindows(layerCount);
             }
             else
@@ -187,7 +191,7 @@ namespace CompFab_Slicer
             if (saveGcode.ShowDialog() == true)
             {
                 string filePath = @saveGcode.FileName;
-                GcodeGenerator generator = new GcodeGenerator(slicedPolygons ,filePath, layerHeight, nozzleDiameter, initTemp, initBedTemp, printTemp, bedTemp, printingSpeed);
+                GcodeGenerator generator = new GcodeGenerator(slicedPolygons ,filePath, layerHeight, nozzleDiameter, initTemp, initBedTemp, printTemp, bedTemp, printingSpeed, numberOfShells, centerXOfModel, centerYOfModel);
             }
         }
 
@@ -242,15 +246,15 @@ namespace CompFab_Slicer
 
                         for (int j = 0; j < slicedPolygons[z][i].Count(); j++)
                         {
-                            polygon.Points.Add(slicedPolygons[z][i][j]);
-                            Point test = new Point(slicedPolygons[z][i][j].X, slicedPolygons[z][i][j].Y);
+                            polygon.Points.Add(slicedPolygons[z][i][j][0]);
+                            Point test = new Point(slicedPolygons[z][i][j][0].X, slicedPolygons[z][i][j][0].Y);
                             Canvas2DPolygon.Points.Add(test);
                         }
 
                         Canvas2DPolygon.RenderTransform = new ScaleTransform(2, 2, 0, 0);
 
-                        var flattened = polygon.Flatten();
-                        meshBuilder.Append(polygon.Points, flattened.Triangulate());  
+                        //var flattened = polygon.Flatten();
+                        //meshBuilder.Append(polygon.Points, flattened.Triangulate());  
                     }
                 }
 

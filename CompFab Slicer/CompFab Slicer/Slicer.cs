@@ -24,61 +24,78 @@ namespace CompFab_Slicer
             this.modelMesh = modelMesh;
         }
 
-        public List<List<Point3DCollection>> Slice(double layerCount)
+        public List<List<List<Point3DCollection>>> Slice(double layerCount, double layerHeight, double shells)
         {
             PolyTree contours = createContoursTree(scale, modelMesh);
             
+            List<List<List<Point3DCollection>>> slicedModelWithShells = new List<List<List<Point3DCollection>>>();
 
-            List<List<Point3DCollection>> polygonsPerLayer = new List<List<Point3DCollection>>();
-            
+
             for (double z = 1; z <= layerCount; z++)
             {
-                Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), z, 0.2, scale);
+                Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), z, layerHeight, scale);
                 Paths connected = connectPoints(intersectingPoints);
 
                 connected = Clipper.CleanPolygons(connected);
+                List<List<Point3DCollection>> shellsPerPolygon = new List<List<Point3DCollection>>();
 
-                Paths eroded = erodePerimeter(connected);
-
-                List<Point3DCollection> polygonPoints = new List<Point3DCollection>();
-
-
-                for (int i = 0; i < eroded.Count; i++)
+                for(int i = 0; i < shells+1; i++)
                 {
-                    connected.Add(eroded[i]);
-                }
-
-
-                for (int i = 0; i < connected.Count; i++)
-                {
-                    Point3DCollection pts = new Point3DCollection();
-                    for (int j = 0; j < connected[i].Count; j++)
+                    if(i == 0)
                     {
-                        Point3D temp = new Point3D((double)(connected[i][j].X) / scale, (double)(connected[i][j].Y) / scale, z*0.2);
-                        pts.Add(temp);
-                    }
-                    polygonPoints.Add(pts);
-                }
+                        (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.2);
+                        connected = eroded;
 
-                polygonsPerLayer.Add(polygonPoints);
+                        shellsPerPolygon.Add(polygonPoints);
+                    } else
+                    {
+                        (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.4);
+                        connected = eroded;
+
+                        shellsPerPolygon.Add(polygonPoints);
+                    }
+                   
+                }
+                
+                slicedModelWithShells.Add(shellsPerPolygon);
+                
             }
             
             
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
 
-            return polygonsPerLayer;
+            return slicedModelWithShells;
         }
 
-        private Paths erodePerimeter(Paths polygons)
+        private Paths erodePerimeter(Paths polygons, double diameter)
         {
             Paths erodedPaths = new Paths();
             ClipperOffset co = new ClipperOffset();
 
             co.AddPaths(polygons, JoinType.jtRound, EndType.etClosedPolygon);
-            co.Execute(ref erodedPaths, (-0.2*scale));
+            co.Execute(ref erodedPaths, ((-diameter)*scale));
 
             return erodedPaths;
+        }
+
+        public (Paths erodedPath, List<Point3DCollection> erodedLayer)  ErodeLayer(Paths connectedPoints, double layer, double diameter)
+        {
+            Paths eroded = erodePerimeter(connectedPoints, diameter);
+            List<Point3DCollection> polygonPoints = new List<Point3DCollection>();
+
+            for (int i = 0; i < eroded.Count; i++)
+            {
+                Point3DCollection pts = new Point3DCollection();
+                for (int j = 0; j < eroded[i].Count; j++)
+                {
+                    Point3D temp = new Point3D((double)(eroded[i][j].X) / scale, (double)(eroded[i][j].Y) / scale, layer * 0.2);
+                    pts.Add(temp);
+                }
+                polygonPoints.Add(pts);
+            }
+
+            return (eroded, polygonPoints);
         }
 
         private Paths connectPoints(Paths slice)
