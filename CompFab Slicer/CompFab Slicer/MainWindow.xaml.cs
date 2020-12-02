@@ -239,23 +239,23 @@ namespace CompFab_Slicer
 
         }
 
-        private System.Windows.Shapes.Polygon setupPolygon()
+        private System.Windows.Shapes.Polygon setupPolygon(Color color)
         {
             System.Windows.Shapes.Polygon polygon = new System.Windows.Shapes.Polygon();
 
             SolidColorBrush b = new SolidColorBrush();
-            b.Color = Colors.DarkGray;
+            b.Color = color;
             SolidColorBrush fillB = new SolidColorBrush();
-            fillB.Color = Colors.DarkGray;
+            fillB.Color = color;
 
             polygon.Stroke = b;
-            polygon.StrokeThickness = 0.2;
+            polygon.StrokeThickness = 0.05;
             polygon.Margin = new Thickness(10);
 
             Grid.SetRow(polygon, 2);
             Grid.SetColumn(polygon, 2);
 
-            polygon.RenderTransform = new ScaleTransform(4, 4, 0, 0);
+            polygon.RenderTransform = new ScaleTransform(8, 8, 0, 0);
 
             return polygon;
         }
@@ -267,17 +267,29 @@ namespace CompFab_Slicer
             {
                 int layer = (int)layerSlider.Value - 1;
 
-                for (int i = 0; i < slicedPolygons[layer][0].Count(); i++)
+                for(int a = 0; a < slicedPolygons[layer].Count() - 1; a++)
                 {
-                    System.Windows.Shapes.Polygon polygon = setupPolygon();
-
-                    for (int j = 0; j < slicedPolygons[layer][0][i].Count(); j++)
+                    for (int i = 0; i < slicedPolygons[layer][a].Count(); i++)
                     {
-                        Point temp = new Point(slicedPolygons[layer][0][i][j].X, slicedPolygons[layer][0][i][j].Y);
-                        polygon.Points.Add(temp);
+                        System.Windows.Shapes.Polygon polygon;
+                        if (a == 0)
+                        {
+                            polygon = setupPolygon(Colors.Black);
+                        }
+                        else
+                        {
+                            polygon = setupPolygon(Colors.Red);
+                        }
+                        
+
+                        for (int j = 0; j < slicedPolygons[layer][a][i].Count(); j++)
+                        {
+                            Point temp = new Point(slicedPolygons[layer][a][i][j].X, slicedPolygons[layer][a][i][j].Y);
+                            polygon.Points.Add(temp);
+                        }
+                        gridCanvas.Children.Add(polygon);
                     }
-                    gridCanvas.Children.Add(polygon);
-                }
+                } 
             }
         }
 
