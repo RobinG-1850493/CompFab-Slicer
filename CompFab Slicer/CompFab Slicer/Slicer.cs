@@ -84,10 +84,23 @@ namespace CompFab_Slicer
         private Paths erodePerimeter(Paths polygons, double diameter)
         {
             Paths erodedPaths = new Paths();
-            ClipperOffset co = new ClipperOffset();
 
-            co.AddPaths(polygons, JoinType.jtRound, EndType.etClosedPolygon);
-            co.Execute(ref erodedPaths, ((-diameter)*scale));
+            for(int i = 0; i < polygons.Count(); i++)
+            {
+                Paths temp = new Paths();
+                ClipperOffset co = new ClipperOffset();
+
+                co.AddPath(polygons[i], JoinType.jtRound, EndType.etClosedPolygon);
+                co.Execute(ref temp, ((-diameter) * scale));
+
+                if(temp.Count != 0)
+                {
+                    erodedPaths.Add(temp[0]);
+                }
+                
+                temp.Clear();
+            }
+
 
             return erodedPaths;
         }
