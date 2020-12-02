@@ -17,6 +17,8 @@ using System.Windows.Shapes;
 using ClipperLib;
 using HelixToolkit.Wpf;
 using Microsoft.Win32;
+using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
+using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 
 namespace CompFab_Slicer
 {
@@ -25,6 +27,7 @@ namespace CompFab_Slicer
         public MeshGeometry3D modelMesh;
         public List<List<List<Point3DCollection>>> slicedPolygons;
         public List<PolyTree> treeList;
+        public List<Paths> infillPerLayer;
         private double layerHeight;
         private double nozzleDiameter;
         private double numberOfShells;
@@ -36,6 +39,7 @@ namespace CompFab_Slicer
         private double printingSpeed;
         double centerXOfModel;
         double centerYOfModel;
+        Rect3D boundingBox = new Rect3D();
         private System.Windows.Shapes.Polygon Canvas2DPolygon = new System.Windows.Shapes.Polygon();
 
         public MainWindow()
@@ -153,9 +157,10 @@ namespace CompFab_Slicer
                 Rect3D bounds = modelMesh.Bounds;
                 double layerCount = bounds.SizeZ / 0.2;
 
-                var result = slicer.Slice(layerCount, layerHeight, numberOfShells);
+                var result = slicer.Slice(layerCount, layerHeight, numberOfShells, infill, bounds);
                 slicedPolygons = result.Item1;
                 treeList = result.Item2;
+                infillPerLayer = result.Item3;
 
                 ShowSlicedWindows(layerCount);
                 draw2DCanvas();
@@ -289,7 +294,18 @@ namespace CompFab_Slicer
                         }
                         gridCanvas.Children.Add(polygon);
                     }
-                } 
+
+                    for (int i = 0; i < infillPerLayer[a].Count(); i++)
+                    {
+                        System.Windows.Shapes.Polygon polygon = setupPolygon(Colors.Blue);
+
+                        for(int j = 0; j < infillPerLayer[a][i].Count(); j++)
+                        {
+                            polygon.Points.Add(new Point(infillPerLayer[a][i][j].X / 10000, infillPerLayer[a][i][j].Y / 10000));
+                        }
+                        gridCanvas.Children.Add(polygon);
+                    }
+                }
             }
         }
 

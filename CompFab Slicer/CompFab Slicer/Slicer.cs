@@ -24,10 +24,11 @@ namespace CompFab_Slicer
             this.modelMesh = modelMesh;
         }
 
-        public Tuple<List<List<List<Point3DCollection>>>, List<PolyTree>> Slice(double layerCount, double layerHeight, double shells)
+        public (List<List<List<Point3DCollection>>>, List<PolyTree>, List<Paths>) Slice(double layerCount, double layerHeight, double shells, double infillDensity, Rect3D boundingBox)
         {
             PolyTree contours = createContoursTree(scale, modelMesh);
             List<PolyTree> treeList = new List<PolyTree>();
+            List<Paths> infill = new List<Paths>();
             List<List<List<Point3DCollection>>> slicedModelWithShells = new List<List<List<Point3DCollection>>>();
 
 
@@ -57,16 +58,69 @@ namespace CompFab_Slicer
                     }
                    
                 }
-                
-                slicedModelWithShells.Add(shellsPerPolygon);
-                
+                slicedModelWithShells.Add(shellsPerPolygon);  
             }
-            
 
+            infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox);
+            
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
 
-            return new Tuple<List<List<List<Point3DCollection>>>, List<PolyTree>>(slicedModelWithShells, treeList);
+            return (slicedModelWithShells, treeList, infill);
+        }
+
+        private List<Paths> generateInfill(List<List<List<Point3DCollection>>> slicedModel, double infillDensity, Rect3D boundingBox)
+        {
+
+            List<Paths> infillPerLayer = new List<Paths>();
+
+
+            for (int layer = 0; layer < slicedModel.Count(); layer++)
+            {
+                Paths infill = new Paths();
+                infillDensity = ((infillDensity / 100));
+                double infillLineNr = boundingBox.SizeY * infillDensity;
+                double lineSpread = boundingBox.SizeY / infillLineNr;
+
+                for (int i = 0; i < infillLineNr; i++)
+                {
+                    Path lineSegment = new Path();
+                    lineSegment.Add(new IntPoint((boundingBox.X) * scale, (i * lineSpread)*scale));
+                    lineSegment.Add(new IntPoint((boundingBox.X + boundingBox.SizeX)*scale, (i * lineSpread)*scale));
+
+                    infill.Add(lineSegment);
+                }
+
+                int polyCount = slicedModel[layer].Count - 1;
+                infillPerLayer.Add(infillIntersection(slicedModel[layer][polyCount], infill));
+            }
+
+            return infillPerLayer;
+        }
+
+        private Paths infillIntersection(List<Point3DCollection> polygons, Paths infill)
+        {
+            Paths intersectedInfill = new Paths();
+            PolyTree result = new PolyTree();
+            Clipper c = new Clipper();
+
+            Paths temp = new Paths();
+            for(int i = 0; i < polygons.Count(); i++)
+            {
+                Path polygon = new Path();
+                for(int j = 0; j < polygons[i].Count(); j++)
+                {
+                    polygon.Add(new IntPoint(polygons[i][j].X * scale, polygons[i][j].Y * scale));
+                }
+                temp.Add(polygon);
+            }
+
+            c.AddPaths(temp, PolyType.ptClip, true);
+            c.AddPaths(infill, PolyType.ptSubject, false);
+
+            c.Execute(ClipType.ctIntersection, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+            return Clipper.PolyTreeToPaths(result);
         }
 
         private PolyTree getPolyTreeStructureAtLayer(Paths polygons, int layerNr)
