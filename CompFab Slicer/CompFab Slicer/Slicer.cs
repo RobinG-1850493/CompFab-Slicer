@@ -24,10 +24,10 @@ namespace CompFab_Slicer
             this.modelMesh = modelMesh;
         }
 
-        public List<List<List<Point3DCollection>>> Slice(double layerCount, double layerHeight, double shells)
+        public Tuple<List<List<List<Point3DCollection>>>, List<PolyTree>> Slice(double layerCount, double layerHeight, double shells)
         {
             PolyTree contours = createContoursTree(scale, modelMesh);
-            
+            List<PolyTree> treeList = new List<PolyTree>();
             List<List<List<Point3DCollection>>> slicedModelWithShells = new List<List<List<Point3DCollection>>>();
 
 
@@ -47,6 +47,7 @@ namespace CompFab_Slicer
                         connected = eroded;
 
                         shellsPerPolygon.Add(polygonPoints);
+                        treeList.Add(getPolyTreeStructureAtLayer(eroded, (int)z));
                     } else
                     {
                         (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.4);
@@ -61,11 +62,23 @@ namespace CompFab_Slicer
                 
             }
             
-            
+
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
 
-            return slicedModelWithShells;
+            return new Tuple<List<List<List<Point3DCollection>>>, List<PolyTree>>(slicedModelWithShells, treeList);
+        }
+
+        private PolyTree getPolyTreeStructureAtLayer(Paths polygons, int layerNr)
+        {
+            PolyTree result = new PolyTree();
+
+            Clipper clipper = new Clipper();
+
+            clipper.AddPaths(polygons, PolyType.ptSubject, true);
+            clipper.Execute(ClipType.ctXor, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+            return result;
         }
 
         private Paths erodePerimeter(Paths polygons, double diameter)

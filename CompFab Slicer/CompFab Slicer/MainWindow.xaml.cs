@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ClipperLib;
 using HelixToolkit.Wpf;
 using Microsoft.Win32;
 
@@ -23,6 +24,7 @@ namespace CompFab_Slicer
     {
         public MeshGeometry3D modelMesh;
         public List<List<List<Point3DCollection>>> slicedPolygons;
+        public List<PolyTree> treeList;
         private double layerHeight;
         private double nozzleDiameter;
         private double numberOfShells;
@@ -52,7 +54,7 @@ namespace CompFab_Slicer
                 ShowSTL(filePath);
             }
         }
-      
+
 
         public void ShowSTL(string file)
         {
@@ -73,33 +75,36 @@ namespace CompFab_Slicer
             centerXOfModel = bounds.SizeX / 2;
             centerYOfModel = bounds.SizeY / 2;
 
-            if(bounds.X <= 0)
+            if (bounds.X <= 0)
             {
                 offsetX = Math.Abs(bounds.X);
-            } else
+            }
+            else
             {
                 offsetX = -Math.Abs(bounds.X);
             }
 
-            if(bounds.Y <= 0)
+            if (bounds.Y <= 0)
             {
                 offsetY = Math.Abs(bounds.Y);
-            } else
+            }
+            else
             {
                 offsetY = -Math.Abs(bounds.Y);
             }
 
-            if(bounds.Z <= 0)
+            if (bounds.Z <= 0)
             {
                 offsetZ = Math.Abs(bounds.Z);
-            } else
+            }
+            else
             {
                 offsetZ = -Math.Abs(bounds.Z);
             }
             modelMesh = geoModel.Geometry as MeshGeometry3D;
-            
-            
-            for(int i = 0; i < modelMesh.Positions.Count; i++)
+
+
+            for (int i = 0; i < modelMesh.Positions.Count; i++)
             {
                 Point3D pos = modelMesh.Positions[i];
                 pos.X += offsetX;
@@ -146,15 +151,20 @@ namespace CompFab_Slicer
                 Slicer slicer = new Slicer(meshBuilder, modelMesh);
 
                 Rect3D bounds = modelMesh.Bounds;
-                double layerCount = bounds.SizeZ/0.2;
+                double layerCount = bounds.SizeZ / 0.2;
 
-                slicedPolygons = slicer.Slice(layerCount, layerHeight, numberOfShells);
+                var result = slicer.Slice(layerCount, layerHeight, numberOfShells);
+                slicedPolygons = result.Item1;
+                treeList = result.Item2;
+
                 ShowSlicedWindows(layerCount);
+                draw2DCanvas();
+                draw3DCavnas();
             }
             else
             {
                 return;
-            } 
+            }
         }
 
         private void ShowSlicedWindows(double layerCount)
@@ -191,7 +201,7 @@ namespace CompFab_Slicer
             if (saveGcode.ShowDialog() == true)
             {
                 string filePath = @saveGcode.FileName;
-                GcodeGenerator generator = new GcodeGenerator(slicedPolygons ,filePath, layerHeight, nozzleDiameter, initTemp, initBedTemp, printTemp, bedTemp, printingSpeed, numberOfShells, centerXOfModel, centerYOfModel);
+                GcodeGenerator generator = new GcodeGenerator(slicedPolygons, filePath, layerHeight, nozzleDiameter, initTemp, initBedTemp, printTemp, bedTemp, printingSpeed, numberOfShells, centerXOfModel, centerYOfModel);
             }
         }
 
@@ -225,53 +235,130 @@ namespace CompFab_Slicer
 
                 gridView.Children.Add(Canvas2DPolygon);
             }
-            
 
+
+        }
+
+        private System.Windows.Shapes.Polygon setupPolygon()
+        {
+            System.Windows.Shapes.Polygon polygon = new System.Windows.Shapes.Polygon();
+
+            SolidColorBrush b = new SolidColorBrush();
+            b.Color = Colors.DarkGray;
+            SolidColorBrush fillB = new SolidColorBrush();
+            fillB.Color = Colors.DarkGray;
+
+            polygon.Stroke = b;
+            polygon.StrokeThickness = 0.2;
+            polygon.Margin = new Thickness(10);
+
+            Grid.SetRow(polygon, 2);
+            Grid.SetColumn(polygon, 2);
+
+            polygon.RenderTransform = new ScaleTransform(4, 4, 0, 0);
+
+            return polygon;
+        }
+
+        private void draw2DCanvas()
+        {
+            gridCanvas.Children.Clear();
+            if (layerSlider.Value != 0)
+            {
+                int layer = (int)layerSlider.Value - 1;
+
+                for (int i = 0; i < slicedPolygons[layer][0].Count(); i++)
+                {
+                    System.Windows.Shapes.Polygon polygon = setupPolygon();
+
+                    for (int j = 0; j < slicedPolygons[layer][0][i].Count(); j++)
+                    {
+                        Point temp = new Point(slicedPolygons[layer][0][i][j].X, slicedPolygons[layer][0][i][j].Y);
+                        polygon.Points.Add(temp);
+                    }
+                    gridCanvas.Children.Add(polygon);
+                }
+            }
+        }
+
+        private void nodeTravel(PolyNode node, ref List<Point> solids, ref List<List<Point>> holes, ref List<Point3D> points)
+        {
+            List<Point> solid = new List<Point>();
+            List<Point> hole = new List<Point>();
+            for (int j = 0; j < node.Contour.Count(); j++)
+            {
+                if (node.IsHole)
+                {
+                    hole.Add(new Point(node.Contour[j].X, node.Contour[j].Y));
+                }
+                else
+                {
+                    solids.Add(new Point(node.Contour[j].X, node.Contour[j].Y));
+                }
+                points.Add(new Point3D(node.Contour[j].X, node.Contour[j].Y, node.Contour[j].Z));
+            }
+            if (node.IsHole) holes.Add(hole);
+
+            foreach (PolyNode p in node.Childs)
+            {
+                nodeTravel(p, ref solids, ref holes, ref points);
+            }
+        }
+
+        private void draw3DCavnas()
+        {
+            var meshBuilder = new MeshBuilder(false, false);
+            Model3DGroup modelGroup = new Model3DGroup();
+
+
+            for (int i = 0; i < (int)(layerSlider.Value - 1); i++)
+            {
+                PolyTree tempTree = treeList[i];
+                List<Point> solids = new List<Point>();
+                List<List<Point>> holes = new List<List<Point>>();
+                List<Point3D> points = new List<Point3D>();
+
+                foreach (PolyNode p in tempTree.Childs)
+                {
+                    nodeTravel(p, ref solids, ref holes, ref points);
+                }
+
+                if (solids.Count() > 2)
+                {
+                    var triangulated = SweepLinePolygonTriangulator.Triangulate(solids, holes);
+                    var p = new HelixToolkit.Wpf.Polygon();
+                    List<Point3D> triangles = new List<Point3D>();
+
+                    for (int b = 0; b < triangulated.Count(); b++)
+                    {
+                        triangles.Add(new Point3D(points[triangulated[b]].X / 10000, points[triangulated[b]].Y / 10000, (layerHeight * i)));
+                    }
+
+                    meshBuilder.AddTriangles(triangles);
+                }
+            }
+
+            var layerModel = LayerModel;
+            GeometryModel3D geomModel = new GeometryModel3D { Geometry = meshBuilder.ToMesh(), Material = MaterialHelper.CreateMaterial(Colors.Yellow), BackMaterial = MaterialHelper.CreateMaterial(Colors.Yellow) };
+            Rect3D newBounds = geomModel.Bounds;
+            double centerX = newBounds.X + newBounds.SizeX / 2;
+            double centerY = newBounds.Y + newBounds.SizeY / 2;
+            double centerZ = newBounds.Z;
+
+            geomModel.Transform = new TranslateTransform3D(-centerX, -centerY, -centerZ);
+
+            modelGroup.Children.Add(geomModel);
+
+            layerModel.Content = modelGroup;
         }
 
         private void LayerSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            
             if (layerSlider.Value != 0)
             {
-                var meshBuilder = new MeshBuilder(false, false, false);
-                Model3DGroup modelGroup = new Model3DGroup();
-
-                for (int z = 0; z < layerSlider.Value; z++)
-                {
-                    Canvas2DPolygon.Points.Clear();
-                    for (int i = 0; i < slicedPolygons[z].Count(); i++)
-                    {
-                        var polygon = new HelixToolkit.Wpf.Polygon3D();
-
-                        for (int j = 0; j < slicedPolygons[z][i].Count(); j++)
-                        {
-                            polygon.Points.Add(slicedPolygons[z][i][j][0]);
-                            Point test = new Point(slicedPolygons[z][i][j][0].X, slicedPolygons[z][i][j][0].Y);
-                            Canvas2DPolygon.Points.Add(test);
-                        }
-
-                        Canvas2DPolygon.RenderTransform = new ScaleTransform(2, 2, 0, 0);
-
-                        //var flattened = polygon.Flatten();
-                        //meshBuilder.Append(polygon.Points, flattened.Triangulate());  
-                    }
-                }
-
-
-                var layerModel = LayerModel;
-                GeometryModel3D geomModel = new GeometryModel3D { Geometry = meshBuilder.ToMesh(), Material = MaterialHelper.CreateMaterial(Colors.Yellow), BackMaterial = MaterialHelper.CreateMaterial(Colors.Yellow) };
-                Rect3D newBounds = geomModel.Bounds;
-                double centerX = newBounds.X + newBounds.SizeX / 2;
-                double centerY = newBounds.Y + newBounds.SizeY / 2;
-                double centerZ = newBounds.Z;
-
-                geomModel.Transform = new TranslateTransform3D(-centerX, -centerY, -centerZ);
-           
-                modelGroup.Children.Add(geomModel);
-                layerModel.Content = modelGroup;
+                draw2DCanvas();
+                draw3DCavnas();
             }
-            
         }
     }
 }

@@ -295,6 +295,8 @@
 
                 </HelixToolkit:HelixViewport3D>
 
+                <Grid x:Name="gridCanvas" Grid.Row="2" Grid.Column="2"></Grid>
+
                 <!--<Viewbox x:Name="viewBox2D" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="1" Grid.RowSpan="1" Visibility="Collapsed" Stretch="Fill">
                     <Canvas x:Name="layer2DCanvas" Width="50" Height="56" ClipToBounds="True">
                       
