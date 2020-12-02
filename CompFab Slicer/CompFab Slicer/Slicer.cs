@@ -18,10 +18,12 @@ namespace CompFab_Slicer
         MeshGeometry3D modelMesh;
 
         static int scale = 10000;
+        int rotation;
         public Slicer(MeshBuilder meshBuilder, MeshGeometry3D modelMesh)
         {
             this.meshBuilder = meshBuilder;
             this.modelMesh = modelMesh;
+            this.rotation = 0;
         }
 
         public (List<List<List<Point3DCollection>>>, List<PolyTree>, List<Paths>) Slice(double layerCount, double layerHeight, double shells, double infillDensity, Rect3D boundingBox)
@@ -61,7 +63,7 @@ namespace CompFab_Slicer
                 slicedModelWithShells.Add(shellsPerPolygon);  
             }
 
-            infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox);
+            infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox, shells);
             
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
@@ -69,33 +71,119 @@ namespace CompFab_Slicer
             return (slicedModelWithShells, treeList, infill);
         }
 
-        private List<Paths> generateInfill(List<List<List<Point3DCollection>>> slicedModel, double infillDensity, Rect3D boundingBox)
+        private List<Paths> generateInfill(List<List<List<Point3DCollection>>> slicedModel, double infillDensity, Rect3D boundingBox, double shells)
         {
 
             List<Paths> infillPerLayer = new List<Paths>();
-
+            infillDensity = ((infillDensity / 100));
 
             for (int layer = 0; layer < slicedModel.Count(); layer++)
             {
                 Paths infill = new Paths();
-                infillDensity = ((infillDensity / 100));
                 double infillLineNr = boundingBox.SizeY * infillDensity;
                 double lineSpread = boundingBox.SizeY / infillLineNr;
 
-                for (int i = 0; i < infillLineNr; i++)
+                if (layer < shells)
                 {
-                    Path lineSegment = new Path();
-                    lineSegment.Add(new IntPoint((boundingBox.X) * scale, (i * lineSpread)*scale));
-                    lineSegment.Add(new IntPoint((boundingBox.X + boundingBox.SizeX)*scale, (i * lineSpread)*scale));
-
-                    infill.Add(lineSegment);
+                    //FLOOR
+                    if(rotation == 1)
+                    {
+                        infill = FloorRoofRotationOne(boundingBox);
+                        rotation = 0;
+                    }
+                    else
+                    {
+                        infill = FloorRoofRotationTwo(boundingBox);
+                        rotation = 1;
+                    }
+                    
                 }
+                else
+                {
+                    if(layer > (slicedModel.Count() - (shells + 1)))
+                    {
+                        //ROOF
+                        if (rotation == 1)
+                        {
+                            infill = FloorRoofRotationOne(boundingBox);
+                            rotation = 0;
+                        }
+                        else
+                        {
+                            infill = FloorRoofRotationTwo(boundingBox);
+                            rotation = 1;
+                        }
+                    } 
+                    else
+                    {
+                        //INFILL
+                        for (int i = 0; i < infillLineNr; i++)
+                        {
+                            Path lineSegment = new Path();
+                            lineSegment.Add(new IntPoint((boundingBox.X) * scale, (i * lineSpread) * scale));
+                            lineSegment.Add(new IntPoint((boundingBox.X + boundingBox.SizeX) * scale, (i * lineSpread) * scale));
 
+                            infill.Add(lineSegment);
+                        }
+                    }
+                }
                 int polyCount = slicedModel[layer].Count - 1;
                 infillPerLayer.Add(infillIntersection(slicedModel[layer][polyCount], infill));
             }
 
             return infillPerLayer;
+        }
+
+        private Paths FloorRoofRotationOne(Rect3D boundingBox)
+        {
+            Paths infill = new Paths();
+
+            for (double i = 0; i <= boundingBox.SizeX; i += 0.4)
+            {
+                Path lineSegment = new Path();
+                lineSegment.Add(new IntPoint(0, i * scale));
+                lineSegment.Add(new IntPoint(i * scale, 0));
+
+                infill.Add(lineSegment);
+            }
+
+            double test = 0;
+            for (double i = boundingBox.SizeX; i > 0; i -= 0.4)
+            {
+                Path lineSegment = new Path();
+                lineSegment.Add(new IntPoint(i * scale, boundingBox.SizeX * scale));
+                lineSegment.Add(new IntPoint(boundingBox.SizeX * scale, i * scale));
+                test += 0.4;
+                infill.Add(lineSegment);
+            }
+
+            return infill;
+        }
+
+        private Paths FloorRoofRotationTwo(Rect3D boundingBox)
+        {
+            Paths infill = new Paths();
+
+
+            for (double i = 0; i <= boundingBox.SizeX; i += 0.4)
+            {
+                Path lineSegment = new Path();
+                lineSegment.Add(new IntPoint(0 * scale, (boundingBox.SizeX - i) * scale));
+                lineSegment.Add(new IntPoint(i * scale, boundingBox.SizeX * scale));
+
+                infill.Add(lineSegment);
+            }
+
+            for (double i = 0; i < boundingBox.SizeX; i += 0.4)
+            {
+                Path lineSegment = new Path();
+                lineSegment.Add(new IntPoint(i * scale, 0 * scale));
+                lineSegment.Add(new IntPoint(boundingBox.SizeX * scale, (boundingBox.SizeX - i) * scale ));
+                
+                infill.Add(lineSegment);
+            }
+
+            return infill;
         }
 
         private Paths infillIntersection(List<Point3DCollection> polygons, Paths infill)

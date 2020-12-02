@@ -295,13 +295,13 @@ namespace CompFab_Slicer
                         gridCanvas.Children.Add(polygon);
                     }
 
-                    for (int i = 0; i < infillPerLayer[a].Count(); i++)
+                    for (int i = 0; i < infillPerLayer[layer].Count(); i++)
                     {
                         System.Windows.Shapes.Polygon polygon = setupPolygon(Colors.Blue);
 
-                        for(int j = 0; j < infillPerLayer[a][i].Count(); j++)
+                        for(int j = 0; j < infillPerLayer[layer][i].Count(); j++)
                         {
-                            polygon.Points.Add(new Point(infillPerLayer[a][i][j].X / 10000, infillPerLayer[a][i][j].Y / 10000));
+                            polygon.Points.Add(new Point(infillPerLayer[layer][i][j].X / 10000, infillPerLayer[layer][i][j].Y / 10000));
                         }
                         gridCanvas.Children.Add(polygon);
                     }
