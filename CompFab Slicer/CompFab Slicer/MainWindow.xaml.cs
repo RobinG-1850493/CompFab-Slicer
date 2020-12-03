@@ -205,7 +205,7 @@ namespace CompFab_Slicer
             if (saveGcode.ShowDialog() == true)
             {
                 string filePath = @saveGcode.FileName;
-                GcodeGenerator generator = new GcodeGenerator(slicedPolygons, filePath, layerHeight, nozzleDiameter, initTemp, initBedTemp, printTemp, bedTemp, printingSpeed, numberOfShells, centerXOfModel, centerYOfModel);
+                GcodeGenerator generator = new GcodeGenerator(slicedPolygons, infillPerLayer, filePath, layerHeight, nozzleDiameter, initTemp, initBedTemp, printTemp, bedTemp, printingSpeed, numberOfShells, centerXOfModel, centerYOfModel);
             }
         }
 

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Media3D;
+using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 
 namespace CompFab_Slicer
 {
@@ -21,10 +22,12 @@ namespace CompFab_Slicer
         private double shells;
         private bool firstTime;
         private int rotation = 0;
+        private List<Paths> infills;
 
-        public GcodeGenerator(List<List<List<Point3DCollection>>> model, string filePath, double layerHeight, double nozzleDiameter, double initTemp, double initBedTemp, double printTemp, double bedTemp, double printingSpeed, double shells, double centerXOfModel, double centerYOfModel)
+        public GcodeGenerator(List<List<List<Point3DCollection>>> model, List<Paths> infills, string filePath, double layerHeight, double nozzleDiameter, double initTemp, double initBedTemp, double printTemp, double bedTemp, double printingSpeed, double shells, double centerXOfModel, double centerYOfModel)
         {
             this.model = model;
+            this.infills = infills;
             this.centerXOfModel = centerXOfModel;
             this.centerYOfModel = centerYOfModel;
             this.shells = shells;
@@ -59,29 +62,29 @@ namespace CompFab_Slicer
         private void WriteOneLayer(int layer, double layerHeight, double nozzleDiameter, double printingSpeed)
         {
             WriteShells(layer, layerHeight, nozzleDiameter, printingSpeed);
-            if(layer > shells)
-            {
-                WriteOneShell((int)shells, layer, layerHeight, nozzleDiameter, printingSpeed);
-                //Begin hier met infill!
-            }
-            else
-            {
-                //Hier moet floor/Roof komen!
-                WriteOneShell((int)shells, layer, layerHeight, nozzleDiameter, printingSpeed);
-                WriteSkin((int)shells);
-            }
+            WriteSkin(layer, layerHeight, nozzleDiameter, printingSpeed);
         }
 
-        private void WriteSkin(int shellNumber)
+        private void WriteSkin(int layer, double layerHeight, double nozzleDiameter, double printingSpeed)
         {
-            if(rotation == 1)
+            Point startPoint = new Point();
+            Point endPoint = new Point();
+            double length;
+
+            for (int i = 0; i < infills[layer].Count; i++)
             {
 
-                rotation = 0;
-            } else
-            {
+                startPoint.X = CalculateCorrectXCoordinate(infills[layer][i][0].X / 10000);
+                startPoint.Y = CalculateCorrectXCoordinate(infills[layer][i][0].Y / 10000);
 
-                rotation = 1;
+                endPoint.X = CalculateCorrectXCoordinate(infills[layer][i][1].X / 10000);
+                endPoint.Y = CalculateCorrectXCoordinate(infills[layer][i][1].Y / 10000);
+
+                length = CalculateDistanceBetweenTwoPoints(startPoint, endPoint);
+                extrusion += CalculateExtrusion(layerHeight, nozzleDiameter, 1, length);
+
+                MoveToNextPosition(startPoint.X, startPoint.Y, printingSpeed * 1.5);
+                MoveAndExtrudeToPosition(endPoint.X, endPoint.Y, extrusion, printingSpeed);
             }
         }
 
