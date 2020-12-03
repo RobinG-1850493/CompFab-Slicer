@@ -300,7 +300,7 @@ namespace CompFab_Slicer
 
                         for(int j = 0; j < infillPerLayer[layer][i].Count(); j++)
                         {
-                            polygon.Points.Add(new Point(infillPerLayer[layer][i][j].X / 10000, infillPerLayer[layer][i][j].Y / 10000));
+                            polygon.Points.Add(new Point(infillPerLayer[layer][i][j].X / 10000.0, infillPerLayer[layer][i][j].Y / 10000.0));
                         }
                         gridCanvas.Children.Add(polygon);
                     }
@@ -358,7 +358,7 @@ namespace CompFab_Slicer
 
                     for (int b = 0; b < triangulated.Count(); b++)
                     {
-                        triangles.Add(new Point3D(points[triangulated[b]].X / 10000, points[triangulated[b]].Y / 10000, (layerHeight * i)));
+                        triangles.Add(new Point3D(points[triangulated[b]].X / 10000.0, points[triangulated[b]].Y / 10000.0, (layerHeight * i)));
                     }
 
                     meshBuilder.AddTriangles(triangles);

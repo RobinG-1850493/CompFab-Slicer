@@ -86,7 +86,7 @@ namespace CompFab_Slicer
                     //FLOOR
                     if(rotation == 1)
                     {
-                        //infill = FloorRoofRotationOne(boundingBox);
+                        infill = FloorRoofRotationOne(boundingBox);
                         rotation = 0;
                     }
                     else
@@ -175,7 +175,7 @@ namespace CompFab_Slicer
         {
             Paths infill = new Paths();
 
-            for (double i = 0; i <= boundingBox.SizeX; i += 0.1)
+            for (double i = 0; i <= boundingBox.SizeX; i += 0.2)
             {
                 Path lineSegment = new Path();
                 lineSegment.Add(new IntPoint(0, i * scale));
@@ -184,7 +184,7 @@ namespace CompFab_Slicer
                 infill.Add(lineSegment);
             }
 
-            for (double i = boundingBox.SizeX; i > 0; i -= 0.1)
+            for (double i = boundingBox.SizeX; i > 0; i -= 0.2)
             {
                 Path lineSegment = new Path();
                 lineSegment.Add(new IntPoint(i * scale, boundingBox.SizeX * scale));
@@ -199,7 +199,7 @@ namespace CompFab_Slicer
         {
             Paths infill = new Paths();
 
-            for (double i = 0; i <= boundingBox.SizeX; i += 0.1)
+            for (double i = 0; i <= boundingBox.SizeX; i += 0.2)
             {
                 Path lineSegment = new Path();
                 lineSegment.Add(new IntPoint(0 * scale, (boundingBox.SizeX - i) * scale));
@@ -208,7 +208,7 @@ namespace CompFab_Slicer
                 infill.Add(lineSegment);
             }
 
-            for (double i = 0; i < boundingBox.SizeX; i += 0.1)
+            for (double i = 0; i < boundingBox.SizeX; i += 0.2)
             {
                 Path lineSegment = new Path();
                 lineSegment.Add(new IntPoint(i * scale, 0 * scale));
@@ -254,7 +254,7 @@ namespace CompFab_Slicer
                     }
                     Paths nTemp = new Paths();
                     nTemp.Add(polygon);
-                    (Paths h, List <Point3DCollection> e)  = ErodeLayer(nTemp, layer, (0.4 * shells) + 0.2);
+                    (Paths h, List <Point3DCollection> e)  = ErodeLayer(nTemp, layer, (0.4 * (shells - 1)));
 
                     subject.AddRange(h);
                 }

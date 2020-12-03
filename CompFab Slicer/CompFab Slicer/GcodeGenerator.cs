@@ -74,11 +74,11 @@ namespace CompFab_Slicer
             for (int i = 0; i < infills[layer].Count; i++)
             {
 
-                startPoint.X = CalculateCorrectXCoordinate(infills[layer][i][0].X / 10000);
-                startPoint.Y = CalculateCorrectXCoordinate(infills[layer][i][0].Y / 10000);
+                startPoint.X = CalculateCorrectXCoordinate(infills[layer][i][0].X / 10000.0);
+                startPoint.Y = CalculateCorrectXCoordinate(infills[layer][i][0].Y / 10000.0);
 
-                endPoint.X = CalculateCorrectXCoordinate(infills[layer][i][1].X / 10000);
-                endPoint.Y = CalculateCorrectXCoordinate(infills[layer][i][1].Y / 10000);
+                endPoint.X = CalculateCorrectXCoordinate(infills[layer][i][1].X / 10000.0);
+                endPoint.Y = CalculateCorrectXCoordinate(infills[layer][i][1].Y / 10000.0);
 
                 length = CalculateDistanceBetweenTwoPoints(startPoint, endPoint);
                 extrusion += CalculateExtrusion(layerHeight, nozzleDiameter, 1, length);
