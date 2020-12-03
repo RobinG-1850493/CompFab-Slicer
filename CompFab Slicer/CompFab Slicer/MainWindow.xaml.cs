@@ -253,7 +253,7 @@ namespace CompFab_Slicer
             fillB.Color = color;
 
             polygon.Stroke = b;
-            polygon.StrokeThickness = 0.2;
+            polygon.StrokeThickness = 0.05;
             polygon.Margin = new Thickness(10);
 
             Grid.SetRow(polygon, 2);
