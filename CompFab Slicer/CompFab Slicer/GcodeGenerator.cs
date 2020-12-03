@@ -61,12 +61,14 @@ namespace CompFab_Slicer
 
         private void WriteOneLayer(int layer, double layerHeight, double nozzleDiameter, double printingSpeed)
         {
+            writer.WriteLine(";LAYER:" + layer);
             WriteShells(layer, layerHeight, nozzleDiameter, printingSpeed);
             WriteSkin(layer, layerHeight, nozzleDiameter, printingSpeed);
         }
 
         private void WriteSkin(int layer, double layerHeight, double nozzleDiameter, double printingSpeed)
         {
+            writer.WriteLine(";STARTING WITH FLOOR/ROOF/INFILL");
             Point startPoint = new Point();
             Point endPoint = new Point();
             double length;
@@ -83,7 +85,7 @@ namespace CompFab_Slicer
                 length = CalculateDistanceBetweenTwoPoints(startPoint, endPoint);
                 extrusion += CalculateExtrusion(layerHeight, nozzleDiameter, 1, length);
 
-                MoveToNextPosition(startPoint.X, startPoint.Y, printingSpeed * 1.5);
+                MoveToNextPosition(startPoint.X, startPoint.Y, printingSpeed * 3);
                 MoveAndExtrudeToPosition(endPoint.X, endPoint.Y, extrusion, printingSpeed);
             }
         }
