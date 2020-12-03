@@ -61,7 +61,19 @@ namespace CompFab_Slicer
 
         private void WriteOneLayer(int layer, double layerHeight, double nozzleDiameter, double printingSpeed)
         {
+
             writer.WriteLine(";LAYER:" + layer);
+            if(layer == 1)
+            {
+                writer.WriteLine("M106 S85");
+            }
+            else if(layer == 2)
+            {
+                writer.WriteLine("M106 S170");
+            } else if(layer == 3)
+            {
+                writer.WriteLine("M106 S255");
+            }
             WriteShells(layer, layerHeight, nozzleDiameter, printingSpeed);
             WriteSkin(layer, layerHeight, nozzleDiameter, printingSpeed);
         }
@@ -85,8 +97,22 @@ namespace CompFab_Slicer
                 length = CalculateDistanceBetweenTwoPoints(startPoint, endPoint);
                 extrusion += CalculateExtrusion(layerHeight, nozzleDiameter, 1, length);
 
-                MoveToNextPosition(startPoint.X, startPoint.Y, printingSpeed * 3);
-                MoveAndExtrudeToPosition(endPoint.X, endPoint.Y, extrusion, printingSpeed);
+                MoveToNextPosition(startPoint.X, startPoint.Y, printingSpeed);
+                if (layer < shells)
+                {
+                    MoveAndExtrudeToPosition(endPoint.X, endPoint.Y, extrusion, printingSpeed/2);
+                }
+                else
+                {
+                    if (layer > (model.Count() - (shells + 1)))
+                    {
+                        MoveAndExtrudeToPosition(endPoint.X, endPoint.Y, extrusion, printingSpeed / 2);
+                    }
+                    else
+                    {
+                        MoveAndExtrudeToPosition(endPoint.X, endPoint.Y, extrusion, printingSpeed);
+                    }
+                }
             }
         }
 
@@ -166,7 +192,7 @@ namespace CompFab_Slicer
 
         private void MoveToNextPosition(double x, double y, double printingSpeed)
         {
-            writer.WriteLine("G0 F3000 X" + x.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture) + " Y" + y.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WriteLine("G0 F9000 X" + x.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture) + " Y" + y.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture));
             if (firstTime)
             {
                 writer.WriteLine("G1 F" + printingSpeed + " E0");
@@ -176,7 +202,7 @@ namespace CompFab_Slicer
 
         private void MoveToNextPosition(double x, double y, double z, double printingSpeed)
         {
-            writer.WriteLine("G0 F3000 X" + x.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture) + " Y" + y.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture) + " Z" + z.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture));
+            writer.WriteLine("G0 F9000 X" + x.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture) + " Y" + y.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture) + " Z" + z.ToString("0.00000", System.Globalization.CultureInfo.InvariantCulture));
             if(firstTime)
             {
                 writer.WriteLine("G1 F" + printingSpeed + " E0");

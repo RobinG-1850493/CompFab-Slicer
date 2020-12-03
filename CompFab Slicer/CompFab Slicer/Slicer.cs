@@ -175,42 +175,34 @@ namespace CompFab_Slicer
         {
             Paths infill = new Paths();
 
-            for (double i = boundingBox.SizeX; i > 0; i -= 0.4)
+            for(double i = 0; i < 300; i += 0.6)
             {
                 Path lineSegment = new Path();
-                lineSegment.Add(new IntPoint((boundingBox.SizeX - i) * scale, boundingBox.SizeX * scale));
-                lineSegment.Add(new IntPoint(boundingBox.SizeX * scale, (boundingBox.SizeX - i) * scale));
+                lineSegment.Add(new IntPoint(0 * scale, i * scale));
+                lineSegment.Add(new IntPoint(i * scale, 0 * scale));
                 infill.Add(lineSegment);
             }
-
-            /*for(double i = 0; i < boundingBox.SizeX; i += 0.2)
-            {
-                Path lineSegment = new Path();
-                lineSegment.Add(new IntPoint((boundingBox.SizeX - i) * scale, boundingBox.SizeX * scale));
-                lineSegment.Add(new IntPoint(boundingBox.SizeX * scale, (boundingBox.SizeX - i) * scale));
-
-                infill.Add(lineSegment);
-            }*/
-
-            for (double i = 0; i <= boundingBox.SizeX; i += 0.4)
-            {
-                Path lineSegment = new Path();
-                lineSegment.Add(new IntPoint(0, (boundingBox.SizeX - i) * scale));
-                lineSegment.Add(new IntPoint((boundingBox.SizeX - i) * scale, 0));
-
-                infill.Add(lineSegment);
-            }
-
-            
 
             return infill;
         }
 
         private Paths FloorRoofRotationTwo(Rect3D boundingBox)
         {
+
+           
+
             Paths infill = new Paths();
 
-            for (double i = 0; i <= boundingBox.SizeX; i += 0.4)
+            for (double i = 0; i < 300; i += 0.6)
+            {
+                Path lineSegment = new Path();
+                lineSegment.Add(new IntPoint(0 * scale, (boundingBox.SizeX - i) * scale));
+                lineSegment.Add(new IntPoint(i * scale, boundingBox.SizeX * scale));
+                infill.Add(lineSegment);
+
+            }
+
+            /*for (double i = 0; i < boundingBox.SizeX; i += 0.6)
             {
                 Path lineSegment = new Path();
                 lineSegment.Add(new IntPoint(0 * scale, (boundingBox.SizeX - i) * scale));
@@ -219,14 +211,14 @@ namespace CompFab_Slicer
                 infill.Add(lineSegment);
             }
 
-            for (double i = 0; i < boundingBox.SizeX; i += 0.4)
+            for (double i = 0; i < boundingBox.SizeX; i += 0.6)
             {
                 Path lineSegment = new Path();
                 lineSegment.Add(new IntPoint(i * scale, 0 * scale));
                 lineSegment.Add(new IntPoint(boundingBox.SizeX * scale, (boundingBox.SizeX - i) * scale ));
                 
                 infill.Add(lineSegment);
-            }
+            }*/
 
             return infill;
         }
