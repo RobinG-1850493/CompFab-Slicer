@@ -39,7 +39,6 @@ namespace CompFab_Slicer
         private double printingSpeed;
         double centerXOfModel;
         double centerYOfModel;
-        Rect3D boundingBox = new Rect3D();
         private System.Windows.Shapes.Polygon Canvas2DPolygon = new System.Windows.Shapes.Polygon();
 
         public MainWindow()
@@ -254,7 +253,7 @@ namespace CompFab_Slicer
             fillB.Color = color;
 
             polygon.Stroke = b;
-            polygon.StrokeThickness = 0.05;
+            polygon.StrokeThickness = 0.2;
             polygon.Margin = new Thickness(10);
 
             Grid.SetRow(polygon, 2);

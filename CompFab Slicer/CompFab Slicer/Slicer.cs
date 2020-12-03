@@ -63,7 +63,7 @@ namespace CompFab_Slicer
                 slicedModelWithShells.Add(shellsPerPolygon);  
             }
 
-            infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox, shells);
+            infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
             
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
@@ -71,7 +71,7 @@ namespace CompFab_Slicer
             return (slicedModelWithShells, treeList, infill);
         }
 
-        private List<Paths> generateInfill(List<List<List<Point3DCollection>>> slicedModel, double infillDensity, Rect3D boundingBox, double shells)
+        private List<Paths> generateInfill(List<List<List<Point3DCollection>>> slicedModel, double infillDensity, Rect3D boundingBox, double shells, double layerHeight)
         {
 
             List<Paths> infillPerLayer = new List<Paths>();
@@ -80,8 +80,6 @@ namespace CompFab_Slicer
             for (int layer = 0; layer < slicedModel.Count(); layer++)
             {
                 Paths infill = new Paths();
-                double infillLineNr = boundingBox.SizeY * infillDensity;
-                double lineSpread = boundingBox.SizeY / infillLineNr;
 
                 if (layer < shells)
                 {
@@ -117,21 +115,60 @@ namespace CompFab_Slicer
                     else
                     {
                         //INFILL
-                        for (int i = 0; i < infillLineNr; i++)
+                        if (rotation == 1)
                         {
-                            Path lineSegment = new Path();
-                            lineSegment.Add(new IntPoint((boundingBox.X) * scale, (i * lineSpread) * scale));
-                            lineSegment.Add(new IntPoint((boundingBox.X + boundingBox.SizeX) * scale, (i * lineSpread) * scale));
-
-                            infill.Add(lineSegment);
+                            infill = infillRotationOne(boundingBox, infillDensity);
+                            rotation = 0;
+                        }
+                        else
+                        {
+                            infill = infillRotationTwo(boundingBox, infillDensity);
+                            rotation = 1;
                         }
                     }
                 }
-                int polyCount = slicedModel[layer].Count - 1;
-                infillPerLayer.Add(infillIntersection(slicedModel[layer][polyCount], infill));
+                infillPerLayer.Add(infillIntersection(slicedModel[layer], infill, layer, shells));
             }
 
             return infillPerLayer;
+        }
+
+        private Paths infillRotationOne(Rect3D boundingBox, double infillDensity)
+        {
+            Paths infill = new Paths();
+
+            double infillLineNr = boundingBox.SizeY * infillDensity;
+            double lineSpread = boundingBox.SizeY / infillLineNr;
+
+            for (int i = 0; i < infillLineNr; i++)
+            {
+                Path lineSegment = new Path();
+                lineSegment.Add(new IntPoint((int)((boundingBox.X) * scale), (i * lineSpread) * scale));
+                lineSegment.Add(new IntPoint((boundingBox.X + boundingBox.SizeX) * scale, (i * lineSpread) * scale));
+
+                infill.Add(lineSegment);
+            }
+
+            return infill;
+        }
+
+        private Paths infillRotationTwo(Rect3D boundingBox, double infillDensity)
+        {
+            Paths infill = new Paths();
+
+            double infillLineNr = boundingBox.SizeX * infillDensity;
+            double lineSpread = boundingBox.SizeX / infillLineNr;
+
+            for (int i = 0; i < infillLineNr; i++)
+            {
+                Path lineSegment = new Path();
+                lineSegment.Add(new IntPoint(((i * lineSpread) * scale), (int)(boundingBox.Y) * scale));
+                lineSegment.Add(new IntPoint(((i * lineSpread) * scale), (boundingBox.Y + boundingBox.SizeY) * scale));
+
+                infill.Add(lineSegment);
+            }
+
+            return infill;
         }
 
         private Paths FloorRoofRotationOne(Rect3D boundingBox)
@@ -147,13 +184,11 @@ namespace CompFab_Slicer
                 infill.Add(lineSegment);
             }
 
-            double test = 0;
             for (double i = boundingBox.SizeX; i > 0; i -= 0.4)
             {
                 Path lineSegment = new Path();
                 lineSegment.Add(new IntPoint(i * scale, boundingBox.SizeX * scale));
                 lineSegment.Add(new IntPoint(boundingBox.SizeX * scale, i * scale));
-                test += 0.4;
                 infill.Add(lineSegment);
             }
 
@@ -163,7 +198,6 @@ namespace CompFab_Slicer
         private Paths FloorRoofRotationTwo(Rect3D boundingBox)
         {
             Paths infill = new Paths();
-
 
             for (double i = 0; i <= boundingBox.SizeX; i += 0.4)
             {
@@ -186,24 +220,59 @@ namespace CompFab_Slicer
             return infill;
         }
 
-        private Paths infillIntersection(List<Point3DCollection> polygons, Paths infill)
+        private Paths infillIntersection(List<List<Point3DCollection>> polygons, Paths infill, int layer, double shells)
         {
             Paths intersectedInfill = new Paths();
             PolyTree result = new PolyTree();
             Clipper c = new Clipper();
 
             Paths temp = new Paths();
-            for(int i = 0; i < polygons.Count(); i++)
+            Paths subject = new Paths();
+
+            for(int i = 0; i < polygons[0].Count(); i++)
             {
                 Path polygon = new Path();
-                for(int j = 0; j < polygons[i].Count(); j++)
+                for(int j = 0; j < polygons[0][i].Count(); j++)
                 {
-                    polygon.Add(new IntPoint(polygons[i][j].X * scale, polygons[i][j].Y * scale));
+                    polygon.Add(new IntPoint(polygons[0][i][j].X * scale, polygons[0][i][j].Y * scale));
                 }
                 temp.Add(polygon);
             }
 
-            c.AddPaths(temp, PolyType.ptClip, true);
+            PolyTree test = getPolyTreeStructureAtLayer(temp, 0);
+
+            PolyNode node = test.GetFirst();
+
+            while (!(node is null))
+            {
+                if (!node.IsHole)
+                {
+                    Path polygon = new Path();
+                    for (int i = 0; i < node.Contour.Count; i++)
+                    {
+                        polygon.Add(new IntPoint(node.Contour[i].X, node.Contour[i].Y));
+                    }
+                    Paths nTemp = new Paths();
+                    nTemp.Add(polygon);
+                    (Paths h, List <Point3DCollection> e)  = ErodeLayer(nTemp, layer, (0.4 * shells) + 0.2);
+
+                    subject.AddRange(h);
+                }
+                else
+                {
+                    Path polygon = new Path();
+                    for (int i = 0; i < node.Contour.Count; i++)
+                    {
+                        polygon.Add(new IntPoint(node.Contour[i].X, node.Contour[i].Y));
+                    }
+                    subject.Add(polygon);
+                }
+
+                node = node.GetNext();
+            }
+
+
+            c.AddPaths(subject, PolyType.ptClip, true);
             c.AddPaths(infill, PolyType.ptSubject, false);
 
             c.Execute(ClipType.ctIntersection, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
@@ -432,24 +501,5 @@ namespace CompFab_Slicer
             intersectingContours.Add(intersectingPoints);
             return intersectingContours;
         }
-
-        /*private Paths intersect(Paths contours, Paths clip, double layer_height, int scale)
-        {
-            Paths solution = new Paths();
-
-            Clipper c = new Clipper();
-            c.AddPaths(contours, PolyType.ptSubject, false);
-            contours.Clear();
-            c.AddPaths(clip, PolyType.ptClip, true);
-
-            PolyTree pSol = new PolyTree();
-
-            c.Execute(ClipType.ctIntersection, pSol,
-              PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
-
-            solution = Clipper.PolyTreeToPaths(pSol);
-
-            return solution;
-        }*/
     }
 }
