@@ -37,6 +37,7 @@ namespace CompFab_Slicer
         private double printTemp;
         private double bedTemp;
         private double printingSpeed;
+        private string adhesionMode;
         double centerXOfModel;
         double centerYOfModel;
         private System.Windows.Shapes.Polygon Canvas2DPolygon = new System.Windows.Shapes.Polygon();
@@ -195,6 +196,7 @@ namespace CompFab_Slicer
             printTemp = Convert.ToDouble(printingTemperatureTextBox.Text);
             bedTemp = Convert.ToDouble(bedTemperatureTextBox.Text);
             printingSpeed = Convert.ToDouble(printingSpeedTextBox.Text);
+            adhesionMode = Convert.ToString(adhesionComboBox.SelectedItem.ToString());
         }
 
         private void SaveMenuItem_Click(object sender, RoutedEventArgs e)
