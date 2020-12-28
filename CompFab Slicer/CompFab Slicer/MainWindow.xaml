@@ -256,7 +256,7 @@
 
                 <!--  The HelixViewport3D supports camera manipulation, and can be used just like the Viewport3D  -->
                 <HelixToolkit:HelixViewport3D x:Name="modelView" CameraChanged="modelView_CameraChanged" Grid.Column="0" Grid.RowSpan="3" Grid.ColumnSpan="4" ShowFrameRate="True" ZoomExtentsWhenLoaded="True" ZoomAroundMouseDownPoint="True" RotateAroundMouseDownPoint="True" IsTopBottomViewOrientedToFrontBack="True" IsViewCubeEdgeClicksEnabled="True">
-          
+
 
                     <!--  Remember to add light to the scene  -->
                     <HelixToolkit:SunLight />
@@ -283,7 +283,7 @@
                     <HelixToolkit:SunLight />
 
                     <ModelVisual3D x:Name="LayerModel"/>
-                    
+
                     <!--  You can also add elements here in the xaml  -->
                     <!-- TODO laat deze aanpassen aan de grootte van het object!!-->
                     <HelixToolkit:GridLinesVisual3D
@@ -336,6 +336,14 @@
 
                 <Label Content="enable supports:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,415,0,0"  Grid.RowSpan="3" VerticalAlignment="Top"/>
                 <CheckBox Content="" Grid.Column="5" HorizontalAlignment="Right" Margin="203,422,30,0" VerticalAlignment="Top"  Grid.RowSpan="3"/>
+
+                <Label Content="adhesion:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,440,0,0" Grid.RowSpan="3" Height="26" VerticalAlignment="Top"/>
+                <ComboBox x:Name="adhesionComboBox" Grid.Column="5" Margin="118,444,30,0" Grid.RowSpan="3" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Width="105">
+                    <ComboBoxItem IsSelected="True">None</ComboBoxItem>
+                    <ComboBoxItem>Brim</ComboBoxItem>
+                    <ComboBoxItem>Skirt</ComboBoxItem>
+                    <ComboBoxItem>Raft</ComboBoxItem>
+                </ComboBox>
 
                 <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,30,30,0" TextWrapping="Wrap"  Grid.RowSpan="3"  Text="Quality" VerticalAlignment="Top"/>
                 <TextBlock Grid.Column="5" Background="LightGray" TextAlignment="Center" Margin="30,115,30,0" TextWrapping="Wrap"  Grid.RowSpan="3"  Text="Shell" VerticalAlignment="Top"/>
