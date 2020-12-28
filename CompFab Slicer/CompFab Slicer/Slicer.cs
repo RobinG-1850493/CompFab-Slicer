@@ -42,9 +42,9 @@ namespace CompFab_Slicer
                 connected = Clipper.CleanPolygons(connected);
                 List<List<Point3DCollection>> shellsPerPolygon = new List<List<Point3DCollection>>();
 
-                for(int i = 0; i < shells+1; i++)
+                for (int i = 0; i < shells + 1; i++)
                 {
-                    if(i == 0)
+                    if (i == 0)
                     {
                         (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.2);
                         connected = eroded;
@@ -58,13 +58,13 @@ namespace CompFab_Slicer
 
                         shellsPerPolygon.Add(polygonPoints);
                     }
-                   
+
                 }
-                slicedModelWithShells.Add(shellsPerPolygon);  
+                slicedModelWithShells.Add(shellsPerPolygon);
             }
 
             infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
-            
+
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
 
@@ -73,6 +73,14 @@ namespace CompFab_Slicer
 
         private List<Paths> generateInfill(List<List<List<Point3DCollection>>> slicedModel, double infillDensity, Rect3D boundingBox, double shells, double layerHeight)
         {
+            var tempRoof = calculateRoofRegions(slicedModel);
+            var tempFloor = calculateFloorRegions(slicedModel);
+
+            List<int> roofRegions = tempRoof.Item1;
+            List<int> roofLayers = tempRoof.Item2;
+
+            List<int> floorRegions = tempFloor.Item1;
+            List<int> floorLayers = tempFloor.Item2;
 
             List<Paths> infillPerLayer = new List<Paths>();
             infillDensity = ((infillDensity / 100));
@@ -80,6 +88,7 @@ namespace CompFab_Slicer
             for (int layer = 0; layer < slicedModel.Count(); layer++)
             {
                 Paths infill = new Paths();
+                Paths denseInfill = new Paths();
 
                 if (layer < shells)
                 {
@@ -111,7 +120,22 @@ namespace CompFab_Slicer
                             infill = FloorRoofRotationTwo(boundingBox);
                             rotation = 1;
                         }
-                    } 
+                    }
+                    else if (roofRegions.Contains(layer) || floorRegions.Contains(layer))
+                    {
+                        if (rotation == 1)
+                        {
+                            denseInfill = FloorRoofRotationOne(boundingBox);
+                            infill = infillRotationOne(boundingBox, infillDensity);
+                            rotation = 0;
+                        }
+                        else
+                        {
+                            denseInfill = FloorRoofRotationTwo(boundingBox);
+                            infill = infillRotationTwo(boundingBox, infillDensity);
+                            rotation = 1;
+                        }
+                    }
                     else
                     {
                         //INFILL
@@ -127,10 +151,316 @@ namespace CompFab_Slicer
                         }
                     }
                 }
-                infillPerLayer.Add(infillIntersection(slicedModel[layer], infill, layer, shells));
+                if (roofRegions.Contains(layer))
+                {
+                    int topL = 0;
+
+                    for(int i = 0; i < roofLayers.Count(); i++)
+                    {
+                        if((roofLayers[i] - layer) <= 3)
+                        {
+                            topL = roofLayers[i];
+                        }
+                    }
+
+                    Paths roofRegion = new Paths();
+                    roofRegion = calcDifference(slicedModel[layer][(int)(shells - 1)], slicedModel[topL][(int)(shells - 1)]);
+
+                    Paths restRegion = calcSparseInfill(roofRegion, slicedModel[layer][(int)(shells - 1)]);
+
+                    Paths layerInfill = new Paths();
+
+                    layerInfill = denseInfillIntersection(roofRegion, denseInfill, layer, shells);
+                    Paths sparseInfill = new Paths();
+
+
+                    Paths cInfill = new Paths();
+
+                    if (checkInfillAvgSize(layerInfill))
+                    {
+                        foreach (Path p in layerInfill)
+                        {
+                            cInfill.Add(p);
+                        }
+                        sparseInfill = RestInfillIntersection(restRegion, infill, layer, shells);
+                    }
+                    else
+                    {
+                        sparseInfill = infillIntersection(slicedModel[layer], infill, layer, shells);
+                    }
+
+                    foreach(Path p in sparseInfill)
+                    {
+                        cInfill.Add(p);
+                    }
+
+                    infillPerLayer.Add(cInfill);
+
+                }
+                else if (floorRegions.Contains(layer))
+                {
+                    int botL = 0;
+
+                    for (int i = 0; i < floorLayers.Count(); i++)
+                    {
+                        if ((floorLayers[i] - layer) <= 3)
+                        {
+                            botL = floorLayers[i];
+                        }
+                    }
+
+                    Paths floorRegion = new Paths();
+                    floorRegion = calcDifference(slicedModel[layer][(int)(shells - 1)], slicedModel[botL][(int)(shells - 1)]);
+
+                    Paths restRegion = calcSparseInfill(floorRegion, slicedModel[layer][(int)(shells - 1)]);
+
+                    Paths layerInfill = new Paths();
+
+                    layerInfill = denseInfillIntersection(floorRegion, denseInfill, botL, shells);
+                    Paths sparseInfill = new Paths();
+
+
+                    Paths cInfill = new Paths();
+
+                    if (checkInfillAvgSize(layerInfill))
+                    {
+                        foreach (Path p in layerInfill)
+                        {
+                            cInfill.Add(p);
+                        }
+                        sparseInfill = RestInfillIntersection(restRegion, infill, layer, shells);
+                    }
+                    else
+                    {
+                        sparseInfill = infillIntersection(slicedModel[layer], infill, layer, shells);
+                    }
+
+                    foreach (Path p in sparseInfill)
+                    {
+                        cInfill.Add(p);
+                    }
+
+                    infillPerLayer.Add(cInfill);
+                }
+                else
+                {
+                    infillPerLayer.Add(infillIntersection(slicedModel[layer], infill, layer, shells));
+                }      
             }
 
             return infillPerLayer;
+        }
+
+        private Boolean checkInfillAvgSize(Paths infill)
+        {
+            double totalSize = 0;
+            int counter = 0;
+
+            foreach(Path p in infill)
+            {
+                double temp = calculateEuclideanDistance(p[0], p[1]); 
+                if(temp > 4000)
+                {
+                    totalSize += temp;
+                    counter++;
+                }
+            }
+
+            totalSize = totalSize / counter;
+
+            if(totalSize > 15000)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
+        private Paths calcSparseInfill(Paths subject, List<Point3DCollection> topLayer)
+        {
+            Clipper c = new Clipper();
+            Paths clip = new Paths();
+
+            PolyTree result = new PolyTree();
+
+
+            for (int i = 0; i < topLayer.Count(); i++)
+            {
+                Path temp = new Path();
+
+                for (int j = 0; j < topLayer[i].Count(); j++)
+                {
+                    temp.Add(new IntPoint(topLayer[i][j].X * scale, topLayer[i][j].Y * scale));
+                }
+                clip.Add(temp);
+            }
+
+            c.AddPaths(subject, PolyType.ptClip, true);
+            c.AddPaths(clip, PolyType.ptSubject, true);
+
+            c.Execute(ClipType.ctDifference, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+            Paths resPaths = Clipper.PolyTreeToPaths(result);
+            Clipper.CleanPolygons(resPaths);
+
+            return resPaths;
+        }
+
+        private Paths calcDifference(List<Point3DCollection> currLayer, List<Point3DCollection> topLayer)
+        {
+            Clipper c = new Clipper();
+            Paths subject = new Paths();
+            Paths clip = new Paths();
+
+            PolyTree result = new PolyTree();
+
+            for (int i = 0; i < currLayer.Count(); i++)
+            {
+                Path temp = new Path();
+
+                for (int j = 0; j < currLayer[i].Count(); j++)
+                {
+                    temp.Add(new IntPoint(currLayer[i][j].X * scale, currLayer[i][j].Y * scale));
+                }
+                subject.Add(temp);
+            }
+
+            for (int i = 0; i < topLayer.Count(); i++)
+            {
+                Path temp = new Path();
+
+                for (int j = 0; j < topLayer[i].Count(); j++)
+                {
+                    temp.Add(new IntPoint(topLayer[i][j].X * scale, topLayer[i][j].Y * scale));
+                }
+                clip.Add(temp);
+            }
+
+            c.AddPaths(clip, PolyType.ptClip, true);
+            c.AddPaths(subject, PolyType.ptSubject, true);
+
+            c.Execute(ClipType.ctDifference, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+            Paths resPaths = Clipper.PolyTreeToPaths(result);
+            Clipper.CleanPolygons(resPaths);
+
+            return resPaths;
+        }
+
+
+
+        private (List<int>, List<int>) calculateRoofRegions(List<List<List<Point3DCollection>>> slicedModel)
+        {
+            List<int> roofs = new List<int>();
+            List<int> roofLayers = new List<int>();
+
+            for (int i = 3; i < slicedModel.Count() - 4; i++)
+            {
+                Paths intersect = new Paths();
+
+                if(roofIntersection(slicedModel[i][0], slicedModel[i + 1][0]))
+                {
+                    roofLayers.Add(i + 1);
+
+                    for(int j = 0; j < 3; j++)
+                    {
+                        roofs.Add(i - j);
+                    }
+                }
+            }
+
+            return (roofs, roofLayers);
+        }
+
+
+        private (List<int>, List<int>) calculateFloorRegions(List<List<List<Point3DCollection>>> slicedModel)
+        {
+            List<int> floors = new List<int>();
+            List<int> floorLayers = new List<int>();
+
+            for (int i = 3; i < slicedModel.Count() - 4; i++)
+            {
+                Paths intersect = new Paths();
+
+                if (roofIntersection(slicedModel[i][0], slicedModel[i - 1][0]))
+                {
+                    floorLayers.Add(i - 1);
+
+                    for (int j = 0; j < 3; j++)
+                    {
+                        floors.Add(i + j);
+                    }
+                }
+            }
+
+            return (floors, floorLayers);
+        }
+
+
+        private Boolean roofIntersection(List<Point3DCollection> currLayer, List<Point3DCollection> topLayer)
+        {
+            Clipper c = new Clipper();
+            Paths subject = new Paths();
+            Paths clip = new Paths();
+
+            PolyTree result = new PolyTree();
+
+            for(int i = 0; i < currLayer.Count(); i++)
+            {
+                Path temp = new Path();
+
+                for(int j = 0; j < currLayer[i].Count(); j++)
+                {
+                    temp.Add(new IntPoint(currLayer[i][j].X, currLayer[i][j].Y));
+                }
+                subject.Add(temp);
+            }
+
+            for (int i = 0; i < topLayer.Count(); i++)
+            {
+                Path temp = new Path();
+
+                for (int j = 0; j < topLayer[i].Count(); j++)
+                {
+                    temp.Add(new IntPoint(topLayer[i][j].X, topLayer[i][j].Y));
+                }
+                clip.Add(temp);
+            }
+
+            c.AddPaths(clip, PolyType.ptClip, true);
+            c.AddPaths(subject, PolyType.ptSubject, true);
+
+            c.Execute(ClipType.ctIntersection, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+            Paths resPaths = Clipper.PolyTreeToPaths(result);
+            Clipper.CleanPolygons(resPaths);
+
+            // Paths regions = new Paths();
+
+            /*for(int i = 0; i < currLayer.Count(); i++)
+            {
+                Path temp = new Path();
+                for(int j = 0; j < currLayer[i].Count(); j++)
+                {
+                    if (!resPaths[i].Contains(new IntPoint(currLayer[i][j].X, currLayer[i][j].Y))){
+                        temp.Add(new IntPoint(currLayer[i][j].X, currLayer[i][j].Y));
+                    }
+                }
+                regions.Add(temp);
+            }*/
+
+            for(int i = 0; i < subject.Count(); i++)
+            {
+                if (!subject[i].All(resPaths[i].Contains))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private Paths infillRotationOne(Rect3D boundingBox, double infillDensity)
@@ -223,6 +553,80 @@ namespace CompFab_Slicer
             return infill;
         }
 
+        private Paths denseInfillIntersection(Paths region, Paths infill, int layer, double shells)
+        {
+            Paths intersectedInfill = new Paths();
+            PolyTree result = new PolyTree();
+            Clipper c = new Clipper();
+
+            Paths subject = new Paths();
+
+            for (int i = 0; i < region.Count(); i++)
+            {
+                Path polygon = new Path();
+                for (int j = 0; j < region[i].Count(); j++)
+                {
+                    polygon.Add(new IntPoint(region[i][j].X, region[i][j].Y));
+                }
+                subject.Add(polygon);
+            }
+
+            c.AddPaths(subject, PolyType.ptClip, true);
+            c.AddPaths(infill, PolyType.ptSubject, false);
+
+            c.Execute(ClipType.ctIntersection, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+            return Clipper.PolyTreeToPaths(result);
+        }
+
+        private Paths RestInfillIntersection(Paths polygons, Paths infill, int layer, double shells)
+        {
+            Paths intersectedInfill = new Paths();
+            PolyTree result = new PolyTree();
+            Clipper c = new Clipper();
+
+            Paths subject = new Paths();
+
+            PolyTree test = getPolyTreeStructureAtLayer(polygons, 0);
+
+            PolyNode node = test.GetFirst();
+
+            while (!(node is null))
+            {
+                if (!node.IsHole)
+                {
+                    Path polygon = new Path();
+                    for (int i = 0; i < node.Contour.Count; i++)
+                    {
+                        polygon.Add(new IntPoint(node.Contour[i].X, node.Contour[i].Y));
+                    }
+                    Paths nTemp = new Paths();
+                    nTemp.Add(polygon);
+                    (Paths h, List<Point3DCollection> e) = ErodeLayer(nTemp, layer, (0.4 * (shells - 1)));
+
+                    subject.AddRange(h);
+                }
+                else
+                {
+                    Path polygon = new Path();
+                    for (int i = 0; i < node.Contour.Count; i++)
+                    {
+                        polygon.Add(new IntPoint(node.Contour[i].X, node.Contour[i].Y));
+                    }
+                    subject.Add(polygon);
+                }
+
+                node = node.GetNext();
+            }
+
+
+            c.AddPaths(subject, PolyType.ptClip, true);
+            c.AddPaths(infill, PolyType.ptSubject, false);
+
+            c.Execute(ClipType.ctIntersection, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+
+            return Clipper.PolyTreeToPaths(result);
+        }
         private Paths infillIntersection(List<List<Point3DCollection>> polygons, Paths infill, int layer, double shells)
         {
             Paths intersectedInfill = new Paths();
