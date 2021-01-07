@@ -38,6 +38,7 @@ namespace CompFab_Slicer
         private double bedTemp;
         private double printingSpeed;
         private string adhesionMode;
+        private bool supportNeeded;
         double centerXOfModel;
         double centerYOfModel;
         private System.Windows.Shapes.Polygon Canvas2DPolygon = new System.Windows.Shapes.Polygon();
@@ -157,7 +158,7 @@ namespace CompFab_Slicer
                 Rect3D bounds = modelMesh.Bounds;
                 double layerCount = bounds.SizeZ / 0.2;
 
-                var result = slicer.Slice(layerCount, layerHeight, numberOfShells, infill, bounds);
+                var result = slicer.Slice(layerCount, layerHeight, numberOfShells, infill, bounds, supportNeeded);
                 slicedPolygons = result.Item1;
                 treeList = result.Item2;
                 infillPerLayer = result.Item3;
@@ -197,6 +198,7 @@ namespace CompFab_Slicer
             bedTemp = Convert.ToDouble(bedTemperatureTextBox.Text);
             printingSpeed = Convert.ToDouble(printingSpeedTextBox.Text);
             adhesionMode = Convert.ToString(adhesionComboBox.SelectedItem.ToString());
+            supportNeeded = supportCheckBox.IsChecked.Value;
         }
 
         private void SaveMenuItem_Click(object sender, RoutedEventArgs e)

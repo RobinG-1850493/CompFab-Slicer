@@ -335,7 +335,7 @@
                 <TextBox x:Name="printingSpeedTextBox" Grid.Column="5" HorizontalAlignment="Right" Height="23"  Grid.RowSpan="3" Margin="158,357,30,0" TextWrapping="Wrap" Text="40" VerticalAlignment="Top" Width="65"/>
 
                 <Label Content="enable supports:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,415,0,0"  Grid.RowSpan="3" VerticalAlignment="Top"/>
-                <CheckBox Content="" Grid.Column="5" HorizontalAlignment="Right" Margin="203,422,30,0" VerticalAlignment="Top"  Grid.RowSpan="3"/>
+                <CheckBox x:Name="supportCheckBox" Content="" Grid.Column="5" HorizontalAlignment="Right" Margin="203,422,30,0" VerticalAlignment="Top"  Grid.RowSpan="3"/>
 
                 <Label Content="adhesion:" Grid.Column="5" HorizontalAlignment="Left" Margin="30,440,0,0" Grid.RowSpan="3" Height="26" VerticalAlignment="Top"/>
                 <ComboBox x:Name="adhesionComboBox" Grid.Column="5" Margin="118,444,30,0" Grid.RowSpan="3" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Width="105">
