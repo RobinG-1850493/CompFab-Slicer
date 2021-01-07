@@ -36,11 +36,6 @@ namespace CompFab_Slicer
 
             for (double z = 1; z <= layerCount; z++)
             {
-                if(z == 17)
-                {
-                    int test = 0;
-                }
-
                 Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), z, layerHeight, scale);
                 Paths connected = connectPoints(intersectingPoints);
 
@@ -68,13 +63,115 @@ namespace CompFab_Slicer
                 }
                 slicedModelWithShells.Add(shellsPerPolygon);
             }
+            
+            var tempSupp = generateSupports(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
+
+            List<Paths> suppRegions = tempSupp.Item1;
+            List<int> supportLayers = tempSupp.Item2;
+
+            for(int i = 0; i < suppRegions.Count(); i++)
+            {
+                for(int j = 0; j < suppRegions[i].Count(); j++)
+                {
+                    for (int l = 1; l < supportLayers[i]; l++)
+                    {
+                        Point3DCollection pts = new Point3DCollection();
+                        for (int x = 0; x < suppRegions[i][j].Count(); x++)
+                        {
+                            Point3D temp = new Point3D((double)(suppRegions[i][j][x].X) / scale, (double)(suppRegions[i][j][x].Y) / scale, l * layerHeight);
+                            pts.Add(temp);
+                        }
+                        slicedModelWithShells[l][0].Add(pts);
+                    }
+                }
+            }
 
             infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
+           
+
 
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
 
             return (slicedModelWithShells, treeList, infill);
+        }
+
+        private (List<Paths>, List<int>) generateSupports(List<List<List<Point3DCollection>>> slicedModel, double infillDensity, Rect3D boundingBox, double shells, double layerHeight)
+        {
+            Paths result = new Paths();
+
+            List<int> supportsRequired = new List<int>();
+
+            for (int layer = 1; layer < slicedModel.Count() - 1; layer++)
+            {
+                List<Point3DCollection> currLayer = slicedModel[layer][0];
+                List<Point3DCollection> topLayer = slicedModel[layer + 1][0];
+
+                Paths subject = new Paths();
+                Paths clip = new Paths();
+
+                Paths supportRegion = new Paths();
+
+                for (int i = 0; i < currLayer.Count(); i++)
+                {
+                    Path temp = new Path();
+
+                    for (int j = 0; j < currLayer[i].Count(); j++)
+                    {
+                        temp.Add(new IntPoint(currLayer[i][j].X * scale, currLayer[i][j].Y * scale));
+                    }
+                    subject.Add(temp);
+                }
+
+                for (int i = 0; i < topLayer.Count(); i++)
+                {
+                    Path temp = new Path();
+
+                    for (int j = 0; j < topLayer[i].Count(); j++)
+                    {
+                        temp.Add(new IntPoint(topLayer[i][j].X * scale, topLayer[i][j].Y * scale));
+                    }
+                    clip.Add(temp);
+                }
+
+                clip = Clipper.CleanPolygons(clip);
+                subject = Clipper.CleanPolygons(subject);
+
+                subject = erodePerimeter(subject, -0.2);
+
+                result = calculateSelfSupported(clip, subject);
+
+                if(result.Count() != 0)
+                {
+                    supportsRequired.Add(layer);
+                }
+            }
+
+            List<Paths> regions = new List<Paths>();
+            for (int i = 0; i < supportsRequired.Count(); i++)
+            {
+                Paths suppRegions = calcDifference(slicedModel[supportsRequired[i] + 1][0], slicedModel[supportsRequired[i]][0]);
+                suppRegions = erodePerimeter(suppRegions, 0.6);
+                regions.Add(suppRegions);
+            }
+
+            return (regions, supportsRequired);
+        }
+
+        private Paths calculateSelfSupported(Paths subject, Paths clip)
+        {
+            Clipper c = new Clipper();
+            PolyTree result = new PolyTree();
+
+            c.AddPaths(clip, PolyType.ptClip, true);
+            c.AddPaths(subject, PolyType.ptSubject, true);
+
+            c.Execute(ClipType.ctDifference, result, PolyFillType.pftPositive, PolyFillType.pftNonZero);
+
+            Paths resPaths = Clipper.PolyTreeToPaths(result);
+            resPaths = Clipper.CleanPolygons(resPaths);
+
+            return resPaths;
         }
 
         private List<Paths> generateInfill(List<List<List<Point3DCollection>>> slicedModel, double infillDensity, Rect3D boundingBox, double shells, double layerHeight)
@@ -350,7 +447,6 @@ namespace CompFab_Slicer
 
             return resPaths;
         }
-
 
 
         private (List<int>, List<int>) calculateRoofRegions(List<List<List<Point3DCollection>>> slicedModel)
