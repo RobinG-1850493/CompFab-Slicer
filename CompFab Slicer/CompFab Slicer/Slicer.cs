@@ -87,8 +87,6 @@ namespace CompFab_Slicer
             }
 
             infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
-           
-
 
             var mesh = meshBuilder.ToMesh();
             mesh.Normals = mesh.CalculateNormals();
