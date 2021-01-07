@@ -271,10 +271,8 @@ namespace CompFab_Slicer
                 for (int i = (int)(shells - 1); i >= 0; i--)
                 {
 
-                    for (int j = 0; j < model[layer][0][polygons].Count; j++)
+                    for (int j = 0; j < model[layer][i][polygons].Count; j++)
                     {
-
-                    
                         if (j == 0)
                         {
                             previousPosition.X = CalculateCorrectXCoordinate(model[layer][i][polygons][j].X);

@@ -44,6 +44,7 @@ namespace CompFab_Slicer
 
                 for (int i = 0; i < shells + 1; i++)
                 {
+                    Paths temp = new Paths();
                     if (i == 0)
                     {
                         (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.2);
@@ -166,7 +167,7 @@ namespace CompFab_Slicer
                     Paths roofRegion = new Paths();
                     roofRegion = calcDifference(slicedModel[layer][(int)(shells - 1)], slicedModel[topL][(int)(shells - 1)]);
 
-                    Paths restRegion = calcSparseInfill(roofRegion, slicedModel[layer][(int)(shells - 1)]);
+                    Paths restRegion = calcSparseInfill(roofRegion, slicedModel[layer][(int)(0)]);
 
                     Paths layerInfill = new Paths();
 
@@ -258,17 +259,12 @@ namespace CompFab_Slicer
 
             foreach(Path p in infill)
             {
-                double temp = calculateEuclideanDistance(p[0], p[1]); 
-                if(temp > 4000)
-                {
-                    totalSize += temp;
-                    counter++;
-                }
+                totalSize += calculateEuclideanDistance(p[0], p[1]); 
             }
 
-            totalSize = totalSize / counter;
+            totalSize = totalSize / infill.Count();
 
-            if(totalSize > 15000)
+            if(totalSize > 30000)
             {
                 return true;
             }
@@ -559,6 +555,8 @@ namespace CompFab_Slicer
             PolyTree result = new PolyTree();
             Clipper c = new Clipper();
 
+            region = erodePerimeter(region, 0.2);
+
             Paths subject = new Paths();
 
             for (int i = 0; i < region.Count(); i++)
@@ -576,7 +574,11 @@ namespace CompFab_Slicer
 
             c.Execute(ClipType.ctIntersection, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
 
-            return Clipper.PolyTreeToPaths(result);
+            Paths pResults = Clipper.PolyTreeToPaths(result);
+
+            //pResults = region.Concat(pResults).ToList();
+
+            return pResults;
         }
 
         private Paths RestInfillIntersection(Paths polygons, Paths infill, int layer, double shells)
@@ -719,6 +721,7 @@ namespace CompFab_Slicer
                 temp.Clear();
             }
 
+            Clipper.CleanPolygons(erodedPaths);
 
             return erodedPaths;
         }
