@@ -26,7 +26,7 @@ namespace CompFab_Slicer
             this.rotation = 0;
         }
 
-        public (List<List<List<Point3DCollection>>>, List<PolyTree>, List<Paths>) Slice(double layerCount, double layerHeight, double shells, double infillDensity, Rect3D boundingBox)
+        public (List<List<List<Point3DCollection>>>, List<PolyTree>, List<Paths>) Slice(double layerCount, double layerHeight, double shells, double infillDensity, Rect3D boundingBox, bool supportNeeded)
         {
             PolyTree contours = createContoursTree(scale, modelMesh);
             List<PolyTree> treeList = new List<PolyTree>();
@@ -64,27 +64,31 @@ namespace CompFab_Slicer
                 slicedModelWithShells.Add(shellsPerPolygon);
             }
             
-            var tempSupp = generateSupports(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
-
-            List<Paths> suppRegions = tempSupp.Item1;
-            List<int> supportLayers = tempSupp.Item2;
-
-            for(int i = 0; i < suppRegions.Count(); i++)
+            if(supportNeeded)
             {
-                for(int j = 0; j < suppRegions[i].Count(); j++)
+                var tempSupp = generateSupports(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
+
+                List<Paths> suppRegions = tempSupp.Item1;
+                List<int> supportLayers = tempSupp.Item2;
+
+                for (int i = 0; i < suppRegions.Count(); i++)
                 {
-                    for (int l = 0; l < supportLayers[i]; l++)
+                    for (int j = 0; j < suppRegions[i].Count(); j++)
                     {
-                        Point3DCollection pts = new Point3DCollection();
-                        for (int x = 0; x < suppRegions[i][j].Count(); x++)
+                        for (int l = 0; l < supportLayers[i]; l++)
                         {
-                            Point3D temp = new Point3D((double)(suppRegions[i][j][x].X) / scale, (double)(suppRegions[i][j][x].Y) / scale, l * layerHeight);
-                            pts.Add(temp);
+                            Point3DCollection pts = new Point3DCollection();
+                            for (int x = 0; x < suppRegions[i][j].Count(); x++)
+                            {
+                                Point3D temp = new Point3D((double)(suppRegions[i][j][x].X) / scale, (double)(suppRegions[i][j][x].Y) / scale, l * layerHeight);
+                                pts.Add(temp);
+                            }
+                            slicedModelWithShells[l][0].Add(pts);
                         }
-                        slicedModelWithShells[l][0].Add(pts);
                     }
                 }
             }
+            
 
             infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
 
