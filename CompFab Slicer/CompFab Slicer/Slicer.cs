@@ -73,7 +73,7 @@ namespace CompFab_Slicer
             {
                 for(int j = 0; j < suppRegions[i].Count(); j++)
                 {
-                    for (int l = 1; l < supportLayers[i]; l++)
+                    for (int l = 0; l < supportLayers[i]; l++)
                     {
                         Point3DCollection pts = new Point3DCollection();
                         for (int x = 0; x < suppRegions[i][j].Count(); x++)
@@ -102,7 +102,7 @@ namespace CompFab_Slicer
 
             List<int> supportsRequired = new List<int>();
 
-            for (int layer = 1; layer < slicedModel.Count() - 1; layer++)
+            for (int layer = 0; layer < slicedModel.Count() - 1; layer++)
             {
                 List<Point3DCollection> currLayer = slicedModel[layer][0];
                 List<Point3DCollection> topLayer = slicedModel[layer + 1][0];
@@ -151,8 +151,39 @@ namespace CompFab_Slicer
             for (int i = 0; i < supportsRequired.Count(); i++)
             {
                 Paths suppRegions = calcDifference(slicedModel[supportsRequired[i] + 1][0], slicedModel[supportsRequired[i]][0]);
-                suppRegions = erodePerimeter(suppRegions, 0.6);
-                regions.Add(suppRegions);
+                PolyTree suppTree = getPolyTreeStructureAtLayer(suppRegions, 0);
+                Paths resultingRegions = new Paths();
+
+                PolyNode node = suppTree.GetFirst();
+
+                while(!(node is null))
+                {
+                    Paths temp = new Paths();
+                    if (node.IsHole)
+                    {
+                        temp.Add(node.Contour);
+                        temp = erodePerimeter(temp, -0.6);
+
+                        foreach(Path p in temp)
+                        {
+                            resultingRegions.Add(p);
+                        }
+                    }
+                    else
+                    {
+                        temp.Add(node.Contour);
+                        temp = erodePerimeter(temp, 0.6);
+
+                        foreach(Path p in temp)
+                        {
+                            resultingRegions.Add(p);
+                        }
+                    }
+
+                    node = node.GetNext();
+                }
+
+                regions.Add(resultingRegions);
             }
 
             return (regions, supportsRequired);
