@@ -36,6 +36,11 @@ namespace CompFab_Slicer
 
             for (double z = 1; z <= layerCount; z++)
             {
+                if(z == 17)
+                {
+                    int test = 0;
+                }
+
                 Paths intersectingPoints = getIntersectingContours(Clipper.PolyTreeToPaths(contours), z, layerHeight, scale);
                 Paths connected = connectPoints(intersectingPoints);
 
@@ -264,7 +269,7 @@ namespace CompFab_Slicer
 
             totalSize = totalSize / infill.Count();
 
-            if(totalSize > 30000)
+            if(totalSize > 15000)
             {
                 return true;
             }
@@ -300,7 +305,7 @@ namespace CompFab_Slicer
             c.Execute(ClipType.ctDifference, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
 
             Paths resPaths = Clipper.PolyTreeToPaths(result);
-            Clipper.CleanPolygons(resPaths);
+            resPaths = Clipper.CleanPolygons(resPaths);
 
             return resPaths;
         }
@@ -341,7 +346,7 @@ namespace CompFab_Slicer
             c.Execute(ClipType.ctDifference, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
 
             Paths resPaths = Clipper.PolyTreeToPaths(result);
-            Clipper.CleanPolygons(resPaths);
+            resPaths = Clipper.CleanPolygons(resPaths);
 
             return resPaths;
         }
@@ -410,7 +415,7 @@ namespace CompFab_Slicer
 
                 for(int j = 0; j < currLayer[i].Count(); j++)
                 {
-                    temp.Add(new IntPoint(currLayer[i][j].X, currLayer[i][j].Y));
+                    temp.Add(new IntPoint(currLayer[i][j].X * scale, currLayer[i][j].Y * scale));
                 }
                 subject.Add(temp);
             }
@@ -421,18 +426,21 @@ namespace CompFab_Slicer
 
                 for (int j = 0; j < topLayer[i].Count(); j++)
                 {
-                    temp.Add(new IntPoint(topLayer[i][j].X, topLayer[i][j].Y));
+                    temp.Add(new IntPoint(topLayer[i][j].X * scale, topLayer[i][j].Y * scale));
                 }
                 clip.Add(temp);
             }
 
+            clip = Clipper.CleanPolygons(clip);
+            subject = Clipper.CleanPolygons(subject);
+
             c.AddPaths(clip, PolyType.ptClip, true);
             c.AddPaths(subject, PolyType.ptSubject, true);
 
-            c.Execute(ClipType.ctIntersection, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
+            c.Execute(ClipType.ctDifference, result, PolyFillType.pftEvenOdd, PolyFillType.pftEvenOdd);
 
             Paths resPaths = Clipper.PolyTreeToPaths(result);
-            Clipper.CleanPolygons(resPaths);
+            resPaths = Clipper.CleanPolygons(resPaths);
 
             // Paths regions = new Paths();
 
@@ -448,15 +456,56 @@ namespace CompFab_Slicer
                 regions.Add(temp);
             }*/
 
-            for(int i = 0; i < subject.Count(); i++)
+
+            bool passed = false;
+            for(int i = 0; i < resPaths.Count(); i++)
             {
-                if (!subject[i].All(resPaths[i].Contains))
+                if(resPaths[i].Count() != 0)
                 {
-                    return true;
+                    if (checkDifference(resPaths[i]))
+                    {
+                        passed = true;
+                    }              
                 }
             }
 
+            if(passed)
+            {
+                return true;
+            }
+
+            /*for (int i = 0; i < subject.Count(); i++)
+            {
+                if (!resPaths[i].All(subject[i].Contains))
+                {
+                    return true;
+                }
+            }*/
+
             return false;
+        }
+
+        private Boolean checkDifference(Path polygon)
+        {
+            double totalSize = 0;
+            int counter = 0;
+
+            for(int i = 0; i < polygon.Count() - 1; i++)
+            {
+                totalSize += calculateEuclideanDistance(polygon[i], polygon[i+1]);
+            }
+
+            totalSize = totalSize / polygon.Count();
+
+            if (totalSize > 10000)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
         }
 
         private Paths infillRotationOne(Rect3D boundingBox, double infillDensity)
@@ -721,7 +770,7 @@ namespace CompFab_Slicer
                 temp.Clear();
             }
 
-            Clipper.CleanPolygons(erodedPaths);
+            erodedPaths = Clipper.CleanPolygons(erodedPaths);
 
             return erodedPaths;
         }

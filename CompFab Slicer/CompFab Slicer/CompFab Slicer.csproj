@@ -63,6 +63,7 @@
     </ApplicationDefinition>
     <Compile Include="GcodeGenerator.cs" />
     <Compile Include="Slicer.cs" />
+    <Compile Include="SupportGenerator.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

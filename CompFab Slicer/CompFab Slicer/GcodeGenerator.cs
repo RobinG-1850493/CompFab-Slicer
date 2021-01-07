@@ -221,7 +221,7 @@ namespace CompFab_Slicer
             Point startPoint = new Point();
             Point endPoint = new Point();
             double length;
-            double positionZ = model[layer][0][0][0].Z;
+            double positionZ = (layer * layerHeight) - (layerHeight/2);
 
             for (int i = 0; i < infills[layer].Count; i++)
             {
@@ -256,20 +256,21 @@ namespace CompFab_Slicer
 
         private void WriteShells(int layer, double layerHeight, double nozzleDiameter, double printingSpeed)
         {
-            for (int polygons = 0; polygons < model[layer][0].Count; polygons++)
+            for (int i = (int)(shells - 1); i >= 0; i--)
             {
-                Point previousPosition = new Point();
-                Point currentPosition = new Point();
-                double length;
-                double positionZ = model[layer][0][0][0].Z;
 
-                previousPosition.X = CalculateCorrectXCoordinate(model[layer][(int)shells - 1][polygons][0].X);
-                previousPosition.Y = CalculateCorrectYCoordinate(model[layer][(int)shells - 1][polygons][0].Y);
-
-                MoveToNextPositionWithRetraction(previousPosition.X, previousPosition.Y, positionZ, printingSpeed);
-
-                for (int i = (int)(shells - 1); i >= 0; i--)
+                for (int polygons = 0; polygons < model[layer][i].Count; polygons++)
                 {
+                    Point previousPosition = new Point();
+                    Point currentPosition = new Point();
+                    double length;
+                    double positionZ = model[layer][0][0][0].Z;
+
+
+                    previousPosition.X = CalculateCorrectXCoordinate(model[layer][i][polygons][0].X);
+                    previousPosition.Y = CalculateCorrectYCoordinate(model[layer][i][polygons][0].Y);
+
+                    MoveToNextPositionWithRetraction(previousPosition.X, previousPosition.Y, positionZ, printingSpeed);
 
                     for (int j = 0; j < model[layer][i][polygons].Count; j++)
                     {
@@ -297,7 +298,7 @@ namespace CompFab_Slicer
                             {
                                 currentPosition.X = CalculateCorrectXCoordinate(model[layer][i][polygons][j].X);
                                 currentPosition.Y = CalculateCorrectYCoordinate(model[layer][i][polygons][j].Y);
-
+                                
                                 length = CalculateDistanceBetweenTwoPoints(previousPosition, currentPosition);
                                 extrusion += CalculateExtrusion(layerHeight, nozzleDiameter, 1, length);
 
