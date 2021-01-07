@@ -52,14 +52,14 @@ namespace CompFab_Slicer
                     Paths temp = new Paths();
                     if (i == 0)
                     {
-                        (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.2);
+                        (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.2, layerHeight);
                         connected = eroded;
 
                         shellsPerPolygon.Add(polygonPoints);
                         treeList.Add(getPolyTreeStructureAtLayer(eroded, (int)z));
                     } else
                     {
-                        (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.4);
+                        (Paths eroded, List<Point3DCollection> polygonPoints) = ErodeLayer(connected, z, 0.4, layerHeight);
                         connected = eroded;
 
                         shellsPerPolygon.Add(polygonPoints);
@@ -188,11 +188,11 @@ namespace CompFab_Slicer
                         {
                             cInfill.Add(p);
                         }
-                        sparseInfill = RestInfillIntersection(restRegion, infill, layer, shells);
+                        sparseInfill = RestInfillIntersection(restRegion, infill, layer, shells, layerHeight);
                     }
                     else
                     {
-                        sparseInfill = infillIntersection(slicedModel[layer], infill, layer, shells);
+                        sparseInfill = infillIntersection(slicedModel[layer], infill, layer, shells, layerHeight);
                     }
 
                     foreach(Path p in sparseInfill)
@@ -234,11 +234,11 @@ namespace CompFab_Slicer
                         {
                             cInfill.Add(p);
                         }
-                        sparseInfill = RestInfillIntersection(restRegion, infill, layer, shells);
+                        sparseInfill = RestInfillIntersection(restRegion, infill, layer, shells, layerHeight);
                     }
                     else
                     {
-                        sparseInfill = infillIntersection(slicedModel[layer], infill, layer, shells);
+                        sparseInfill = infillIntersection(slicedModel[layer], infill, layer, shells, layerHeight);
                     }
 
                     foreach (Path p in sparseInfill)
@@ -250,7 +250,7 @@ namespace CompFab_Slicer
                 }
                 else
                 {
-                    infillPerLayer.Add(infillIntersection(slicedModel[layer], infill, layer, shells));
+                    infillPerLayer.Add(infillIntersection(slicedModel[layer], infill, layer, shells, layerHeight));
                 }      
             }
 
@@ -630,7 +630,7 @@ namespace CompFab_Slicer
             return pResults;
         }
 
-        private Paths RestInfillIntersection(Paths polygons, Paths infill, int layer, double shells)
+        private Paths RestInfillIntersection(Paths polygons, Paths infill, int layer, double shells, double layerHeight)
         {
             Paths intersectedInfill = new Paths();
             PolyTree result = new PolyTree();
@@ -653,7 +653,7 @@ namespace CompFab_Slicer
                     }
                     Paths nTemp = new Paths();
                     nTemp.Add(polygon);
-                    (Paths h, List<Point3DCollection> e) = ErodeLayer(nTemp, layer, (0.4 * (shells - 1)));
+                    (Paths h, List<Point3DCollection> e) = ErodeLayer(nTemp, layer, (0.4 * (shells - 1)), layerHeight);
 
                     subject.AddRange(h);
                 }
@@ -678,7 +678,7 @@ namespace CompFab_Slicer
 
             return Clipper.PolyTreeToPaths(result);
         }
-        private Paths infillIntersection(List<List<Point3DCollection>> polygons, Paths infill, int layer, double shells)
+        private Paths infillIntersection(List<List<Point3DCollection>> polygons, Paths infill, int layer, double shells, double layerHeight)
         {
             Paths intersectedInfill = new Paths();
             PolyTree result = new PolyTree();
@@ -712,7 +712,7 @@ namespace CompFab_Slicer
                     }
                     Paths nTemp = new Paths();
                     nTemp.Add(polygon);
-                    (Paths h, List <Point3DCollection> e)  = ErodeLayer(nTemp, layer, (0.4 * (shells - 1)));
+                    (Paths h, List <Point3DCollection> e)  = ErodeLayer(nTemp, layer, (0.4 * (shells - 1)), layerHeight);
 
                     subject.AddRange(h);
                 }
@@ -775,7 +775,7 @@ namespace CompFab_Slicer
             return erodedPaths;
         }
 
-        public (Paths erodedPath, List<Point3DCollection> erodedLayer)  ErodeLayer(Paths connectedPoints, double layer, double diameter)
+        public (Paths erodedPath, List<Point3DCollection> erodedLayer)  ErodeLayer(Paths connectedPoints, double layer, double diameter, double layerHeight)
         {
             Paths eroded = erodePerimeter(connectedPoints, diameter);
             List<Point3DCollection> polygonPoints = new List<Point3DCollection>();
@@ -785,7 +785,7 @@ namespace CompFab_Slicer
                 Point3DCollection pts = new Point3DCollection();
                 for (int j = 0; j < eroded[i].Count; j++)
                 {
-                    Point3D temp = new Point3D((double)(eroded[i][j].X) / scale, (double)(eroded[i][j].Y) / scale, layer * 0.2);
+                    Point3D temp = new Point3D((double)(eroded[i][j].X) / scale, (double)(eroded[i][j].Y) / scale, layer * layerHeight);
                     pts.Add(temp);
                 }
                 polygonPoints.Add(pts);
