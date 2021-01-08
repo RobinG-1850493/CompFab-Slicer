@@ -221,7 +221,7 @@ namespace CompFab_Slicer
             Point startPoint = new Point();
             Point endPoint = new Point();
             double length;
-            double positionZ = (layer * layerHeight) - (layerHeight/2);
+            double positionZ = model[layer][0][0][0].Z;
 
             for (int i = 0; i < infills[layer].Count; i++)
             {
