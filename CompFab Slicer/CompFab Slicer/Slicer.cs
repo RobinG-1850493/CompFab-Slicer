@@ -89,7 +89,6 @@ namespace CompFab_Slicer
                 }
             }
             
-
             infill = generateInfill(slicedModelWithShells, infillDensity, boundingBox, shells, layerHeight);
 
             var mesh = meshBuilder.ToMesh();
@@ -164,7 +163,7 @@ namespace CompFab_Slicer
                     if (node.IsHole)
                     {
                         temp.Add(node.Contour);
-                        temp = erodePerimeter(temp, -0.6);
+                        temp = erodePerimeter(temp, -0.8);
 
                         foreach(Path p in temp)
                         {
@@ -174,7 +173,7 @@ namespace CompFab_Slicer
                     else
                     {
                         temp.Add(node.Contour);
-                        temp = erodePerimeter(temp, 0.6);
+                        temp = erodePerimeter(temp, 0.8);
 
                         foreach(Path p in temp)
                         {
